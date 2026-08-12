@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Forest Command Center</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.3.6/css/buttons.bootstrap5.min.css">
+
+    <style>
+        body { background-color: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow-x: hidden; }
+        .dashboard-header { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; padding: 25px 0; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-radius: 0 0 20px 20px; }
+        .content-container { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.04); margin-bottom: 30px; }
+        #map { height: 450px; border-radius: 15px; z-index: 1; border: 3px solid transparent; transition: all 0.3s ease; }
+        .map-active { border-color: #ff4757 !important; cursor: crosshair !important; box-shadow: 0 0 15px rgba(255, 71, 87, 0.4); }
+        .sensor-card { border: none; border-radius: 15px; color: white; padding: 20px; transition: transform 0.3s; }
+        .sensor-card:hover { transform: translateY(-5px); }
+        .bg-temp { background: linear-gradient(135deg, #ff6b81 0%, #ff4757 100%); }
+        .bg-pm25 { background: linear-gradient(135deg, #7bed9f 0%, #2ed573 100%); }
+        .bg-rain { background: linear-gradient(135deg, #70a1ff 0%, #1e90ff 100%); }
+        .bg-wind { background: linear-gradient(135deg, #eccc68 0%, #ffa502 100%); }
+        .value-text { font-size: clamp(1.5rem, 5vw, 2.8rem); font-weight: 800; line-height: 1; margin: 10px 0; }
+        .sensor-icon { font-size: 3.5rem; opacity: 0.3; position: absolute; right: 20px; bottom: 20px; }
+        @keyframes pulse-red { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255,71,87,0.7); } 70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(255,71,87,0); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255,71,87,0); } }
+        .btn-pulsing { animation: pulse-red 2s infinite; }
+        .nav-pills .nav-link { color: #1e3c72; font-weight: bold; border-radius: 50px; padding: 10px 20px; margin-right: 10px; border: 1px solid #1e3c72; }
+        .nav-pills .nav-link.active { background-color: #1e3c72; color: white; }
+    </style>
+</head>
+<body>
+
+    <!-- Toast Notification มุมขวาบน -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+        <div id="alarmToast" class="toast align-items-center text-white bg-danger border-0 shadow-lg" role="alert">
+            <div class="d-flex">
+                <div class="toast-body fw-bold fs-6" id="toastMessage">🚨 พบความเสี่ยงไฟป่า!</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <div class="dashboard-header">
+        <div class="container d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h2 class="mb-0 fw-bold"><i class="fa-solid fa-satellite-dish text-warning"></i> Smart Forest Center</h2>
+                <span class="opacity-75">ระบบบัญชาการเครือข่ายเซนเซอร์เฝ้าระวังไฟป่าอัจฉริยะ</span>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <select id="stationFilter" class="form-select bg-light text-dark fw-bold border-0 shadow-sm rounded-pill px-3" style="width: auto; cursor: pointer;">
+                    <option value="ALL">🌐 ดูข้อมูลทุกสถานี</option>
+                </select>
+                <div id="last-update-time" class="badge bg-dark fs-6 px-3 py-2 rounded-pill"><i class="fa-regular fa-clock"></i> รอรับข้อมูล...</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- ภาพรวม (Overview) -->
+        <div class="row g-2 mb-3 text-center">
+            <div class="col-md-3 col-6"><div class="bg-white p-2 rounded shadow-sm border-start border-primary border-4"><small class="text-muted fw-bold">📡 สถานีทั้งหมด</small><h4 id="stat-total" class="mb-0 fw-bold text-primary">0</h4></div></div>
+            <div class="col-md-3 col-6"><div class="bg-white p-2 rounded shadow-sm border-start border-success border-4"><small class="text-muted fw-bold">🟢 Online</small><h4 id="stat-online" class="mb-0 fw-bold text-success">0</h4></div></div>
+            <div class="col-md-3 col-6"><div class="bg-white p-2 rounded shadow-sm border-start border-secondary border-4"><small class="text-muted fw-bold">🔴 Offline</small><h4 id="stat-offline" class="mb-0 fw-bold text-secondary">0</h4></div></div>
+            <div class="col-md-3 col-6"><div class="bg-white p-2 rounded shadow-sm border-start border-danger border-4"><small class="text-muted fw-bold">🔥 เสี่ยงไฟป่า</small><h4 id="stat-risk" class="mb-0 fw-bold text-danger">0</h4></div></div>
+        </div>
+
+        <!-- หน้าปัดเซนเซอร์ -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-3 col-6"><div class="sensor-card bg-temp position-relative shadow"><h6>อุณหภูมิ (°C)</h6><div class="value-text" id="val-temp">--</div><i class="fa-solid fa-temperature-high sensor-icon"></i></div></div>
+            <div class="col-md-3 col-6"><div class="sensor-card bg-pm25 position-relative shadow"><h6>PM2.5 (ug/m3)</h6><div class="value-text" id="val-pm25">--</div><i class="fa-solid fa-smog sensor-icon"></i></div></div>
+            <div class="col-md-3 col-6"><div class="sensor-card bg-rain position-relative shadow"><h6>ค่าน้ำฝน (0-1024)</h6><div class="value-text" id="val-rain">--</div><i class="fa-solid fa-cloud-rain sensor-icon"></i></div></div>
+            <div class="col-md-3 col-6"><div class="sensor-card bg-wind position-relative shadow"><h6>ความเร็วลม (m/s)</h6><div class="value-text" id="val-wind">--</div><i class="fa-solid fa-wind sensor-icon"></i></div></div>
+        </div>
+
+        <!-- แผนที่ & ค้นหา -->
+        <div class="content-container">
+            <div class="row align-items-center mb-3">
+                <div class="col-md-4">
+                    <h4 class="m-0 fw-bold"><i class="fa-solid fa-map-location-dot text-primary"></i> แผนที่เครือข่ายสถานี</h4>
+                </div>
+                <div class="col-md-5 mt-2 mt-md-0">
+                    <!-- ช่องค้นหาสถานี -->
+                    <div class="input-group shadow-sm">
+                        <span class="input-group-text bg-white border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                        <input type="text" id="searchMapInput" class="form-control border-start-0" placeholder="ค้นหารหัสสถานี หรือ ชื่อจุดติดตั้ง...">
+                        <button class="btn btn-primary fw-bold" onclick="searchStation()">ค้นหา</button>
+                    </div>
+                </div>
+                <div class="col-md-3 mt-2 mt-md-0 text-md-end">
+                    <button id="addModeBtn" class="btn btn-warning fw-bold rounded-pill shadow-sm px-4"><i class="fa-solid fa-thumbtack"></i> เพิ่มสถานี</button>
+                </div>
+            </div>
+            
+            <div id="instructionBox" class="alert alert-danger fw-bold shadow-sm" style="display:none;"><i class="fa-solid fa-hand-pointer fa-bounce"></i> จิ้มลงบนแผนที่จุดที่ต้องการติดตั้ง เพื่อบันทึกพิกัดสถานีใหม่!</div>
+            <div id="map"></div>
+        </div>
+
+        <!-- แท็บ กราฟ Chart.js & ตารางข้อมูล -->
+        <div class="content-container mb-5">
+            <ul class="nav nav-pills mb-4" id="dataTab" role="tablist">
+                <li class="nav-item" role="presentation"><button class="nav-link active shadow-sm" data-bs-toggle="pill" data-bs-target="#tab-graph" type="button"><i class="fa-solid fa-chart-line"></i> กราฟแนวโน้ม</button></li>
+                <li class="nav-item" role="presentation"><button class="nav-link shadow-sm" data-bs-toggle="pill" data-bs-target="#tab-table" type="button"><i class="fa-solid fa-table-list"></i> ตารางประวัติ (Logs)</button></li>
+            </ul>
+
+            <div class="tab-content">
+                <!-- หน้ากราฟ -->
+                <div class="tab-pane fade show active" id="tab-graph">
+                    <div class="row">
+                        <div class="col-md-6 mb-4"><h5 class="fw-bold text-danger text-center"><i class="fa-solid fa-temperature-high"></i> กราฟอุณหภูมิ (°C)</h5><canvas id="tempChart" style="max-height: 300px;"></canvas></div>
+                        <div class="col-md-6 mb-4"><h5 class="fw-bold text-success text-center"><i class="fa-solid fa-smog"></i> กราฟ PM2.5 (ug/m3)</h5><canvas id="pmChart" style="max-height: 300px;"></canvas></div>
+                    </div>
+                </div>
+                <!-- หน้าตาราง -->
+                <div class="tab-pane fade" id="tab-table">
+                    <div class="table-responsive">
+                        <table id="logTable" class="table table-hover w-100 align-middle">
+                            <thead class="table-dark"><tr><th>วัน-เวลา</th><th>รหัสสถานี</th><th>อุณหภูมิ (°C)</th><th>PM2.5</th><th>น้ำฝน</th><th>ลม (m/s)</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal เพิ่มสถานี -->
+    <div class="modal fade" id="stationModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-primary text-white"><h5 class="modal-title"><i class="fa-solid fa-circle-plus"></i> ยืนยันพิกัดสถานีใหม่</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <form id="stationForm">
+                        <div class="mb-3"><label class="form-label text-muted">รหัสเครื่อง (Auto)</label><input type="text" id="stId" class="form-control fw-bold" readonly></div>
+                        <div class="mb-3"><label class="form-label fw-bold">ชื่อจุดติดตั้ง</label><input type="text" id="stName" class="form-control border-primary" placeholder="เช่น ป่าโซนเหนือ" required></div>
+                        <input type="hidden" id="stLat"><input type="hidden" id="stLng">
+                        <button type="submit" class="btn btn-primary w-100 fw-bold py-2 rounded-pill">บันทึกข้อมูล</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts ทั้งหมด -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.bootstrap5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.print.min.js"></script>
+    
+    <!-- Firebase SDK (ใช้เฉพาะ Database) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <script>
+        // -----------------------------------------------------------
+        // การเชื่อมต่อ Firebase
+        // -----------------------------------------------------------
+        const firebaseConfig = {
+            databaseURL: "https://smart-forest-station-default-rtdb.asia-southeast1.firebasedatabase.app/"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        let currentFilter = 'ALL';
+        let latestStationData = {}; 
+        let stationMasterList = {}; 
+        let allLogsMemory = []; 
+
+        const alarmSound = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
+
+        // --- ตั้งค่า DataTables ---
+        const table = $('#logTable').DataTable({
+            dom: '<"row align-items-center mb-3"<"col-md-6"B><"col-md-6"f>>rt<"row"<"col-md-6"i><"col-md-6"p>>',
+            buttons: [
+                { extend: 'excelHtml5', text: '<i class="fa-solid fa-file-excel"></i> Excel', className: 'btn btn-success btn-sm rounded-pill px-3 shadow-sm' },
+                { extend: 'pdfHtml5', text: '<i class="fa-solid fa-file-pdf"></i> PDF', className: 'btn btn-danger btn-sm rounded-pill px-3 shadow-sm mx-1' }
+            ],
+            order: [[0, 'desc']], language: { url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/th.json' }
+        });
+
+        // --- ตั้งค่า Chart.js ---
+        const chartOptions = { responsive: true, maintainAspectRatio: false, scales: { x: { ticks: { maxRotation: 45, minRotation: 45 } } } };
+        const tempChart = new Chart(document.getElementById('tempChart'), { type: 'line', data: { labels: [], datasets: [{ label: 'อุณหภูมิ (°C)', data: [], borderColor: '#ff4757', backgroundColor: 'rgba(255, 71, 87, 0.2)', borderWidth: 2, fill: true, tension: 0.3 }] }, options: chartOptions });
+        const pmChart = new Chart(document.getElementById('pmChart'), { type: 'line', data: { labels: [], datasets: [{ label: 'PM2.5 (ug/m3)', data: [], borderColor: '#2ed573', backgroundColor: 'rgba(46, 213, 115, 0.2)', borderWidth: 2, fill: true, tension: 0.3 }] }, options: chartOptions });
+
+        function updateCharts() {
+            let filterData = currentFilter === 'ALL' ? allLogsMemory : allLogsMemory.filter(d => (d.station_id || "ST-01") === currentFilter);
+            let recentData = filterData.slice(-20); 
+            let labels = recentData.map(d => new Date(d.timestamp).toLocaleTimeString('th-TH'));
+            tempChart.data.labels = labels; tempChart.data.datasets[0].data = recentData.map(d => d.temp); tempChart.update();
+            pmChart.data.labels = labels; pmChart.data.datasets[0].data = recentData.map(d => d.pm25); pmChart.update();
+        }
+
+        // --- ตั้งค่าแผนที่ ---
+        const map = L.map('map').setView([13.95, 101.75], 11);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
+
+        let mapMarkers = {}; let mapCircles = {}; let isAddMode = false;
+
+        $('#addModeBtn').click(function() {
+            isAddMode = !isAddMode;
+            if (isAddMode) { $(this).removeClass('btn-warning').addClass('btn-danger btn-pulsing').html('<i class="fa-solid fa-xmark"></i> ยกเลิก'); $('#instructionBox').slideDown(); $('#map').addClass('map-active'); } 
+            else { $(this).removeClass('btn-danger btn-pulsing').addClass('btn-warning').html('<i class="fa-solid fa-thumbtack"></i> เพิ่มสถานี'); $('#instructionBox').slideUp(); $('#map').removeClass('map-active'); }
+        });
+
+        map.on('click', function(e) {
+            if (!isAddMode) return;
+            db.ref('stations').once('value', (snapshot) => {
+                let nextNum = 1; if (snapshot.val()) nextNum = Object.keys(snapshot.val()).length + 1;
+                const autoId = 'ST-' + String(nextNum).padStart(2, '0');
+                $('#stId').val(autoId); $('#stName').val(''); $('#stLat').val(e.latlng.lat.toFixed(6)); $('#stLng').val(e.latlng.lng.toFixed(6));
+                $('#stationModal').modal('show'); $('#addModeBtn').click(); 
+            });
+        });
+
+        $('#stationForm').submit(function(e) {
+            e.preventDefault();
+            db.ref('stations/' + $('#stId').val()).set({ name: $('#stName').val(), lat: parseFloat($('#stLat').val()), lng: parseFloat($('#stLng').val()) })
+            .then(() => $('#stationModal').modal('hide'));
+        });
+
+        // ฟังก์ชันลบสถานี 
+        window.deleteStation = function(id) {
+            if(confirm(`ลบสถานี ${id} ใช่หรือไม่?`)) db.ref('stations/' + id).remove();
+        };
+
+        // ฟังก์ชันค้นหาสถานี
+        window.searchStation = function() {
+            const query = $('#searchMapInput').val().toLowerCase();
+            if(!query) return;
+            let found = false;
+            for (const [id, st] of Object.entries(stationMasterList)) {
+                if (id.toLowerCase().includes(query) || st.name.toLowerCase().includes(query)) {
+                    map.setView([st.lat, st.lng], 16); if(mapMarkers[id]) mapMarkers[id].openPopup();
+                    found = true; break;
+                }
+            }
+            if(!found) alert('ไม่พบสถานีที่คุณค้นหาครับ');
+        };
+        $('#searchMapInput').keypress(function(e){ if(e.which == 13) searchStation(); });
+
+        function updateOverview() {
+            let total = 0, online = 0, offline = 0, risk = 0; const now = Date.now();
+            for (const stId in stationMasterList) {
+                total++; const stData = latestStationData[stId];
+                if(stData) { if((now - stData.timestamp) > 600000) offline++; else online++; if(stData.temp > 38 || stData.pm25 > 100) risk++; } else { offline++; }
+            }
+            $('#stat-total').text(total); $('#stat-online').text(online); $('#stat-offline').text(offline); $('#stat-risk').text(risk);
+        }
+
+        function redrawMarkers() {
+            const now = Date.now();
+            for (const [id, data] of Object.entries(stationMasterList)) {
+                if(mapCircles[id]) map.removeLayer(mapCircles[id]); if(mapMarkers[id]) map.removeLayer(mapMarkers[id]);
+
+                const sensorData = latestStationData[id];
+                let riskLevel = "🟢 ปกติ"; let riskColor = "#2ed573"; let statusText = "⚪ รอข้อมูล"; let timeStr = "-";
+                let t = "--", p = "--", r = "--", w = "--";
+
+                if (sensorData) {
+                    t = sensorData.temp; p = sensorData.pm25; r = sensorData.rain; w = sensorData.wind;
+                    timeStr = new Date(sensorData.timestamp).toLocaleString('th-TH');
+                    
+                    if (t > 40 && p > 150) { riskLevel = "🔴 วิกฤต"; riskColor = "#ff4757"; }
+                    else if (t > 38 || p > 100) { riskLevel = "🟠 เสี่ยงสูง"; riskColor = "#ffa502"; }
+                    else if (t >= 35) { riskLevel = "🟡 เฝ้าระวัง"; riskColor = "#eccc68"; }
+                    if ((now - sensorData.timestamp) > 600000) statusText = "🔴 Offline"; else statusText = "🟢 Online";
+                }
+
+                mapCircles[id] = L.circle([data.lat, data.lng], { color: riskColor, fillColor: riskColor, fillOpacity: 0.3, radius: 500 }).addTo(map);
+                
+                // ปุ่มลบแสดงทันทีสำหรับเวอร์ชันที่ไม่มีระบบ Login
+                let deleteBtnHtml = `<button class="btn btn-sm btn-danger w-100 rounded-pill mt-2" onclick="deleteStation('${id}')"><i class="fa-solid fa-trash"></i> ลบสถานี</button>`;
+
+                const popupContent = `<div class="text-center"><h6 class="fw-bold mb-1">${data.name}</h6><small class="text-muted">รหัส: ${id} | ${statusText}</small><hr class="my-2"><div class="text-start small mb-2">🌡️ อุณหภูมิ: <b>${t}°C</b><br>💨 PM2.5: <b>${p}</b><br>🌧️ ฝน: <b>${r}</b><br>🌬️ ลม: <b>${w} m/s</b><br>🔥 สถานะ: <b>${riskLevel}</b><br>🕒 ล่าสุด: <b>${timeStr}</b></div> ${deleteBtnHtml} </div>`;
+                mapMarkers[id] = L.marker([data.lat, data.lng]).addTo(map).bindPopup(popupContent);
+            }
+        }
+
+        db.ref('stations').on('value', (snapshot) => {
+            stationMasterList = snapshot.val() || {};
+            $('#stationFilter').find('option:not(:first)').remove();
+            for (const [id, data] of Object.entries(stationMasterList)) { $('#stationFilter').append(`<option value="${id}">📍 ${data.name} (${id})</option>`); }
+            $('#stationFilter').val(currentFilter);
+            redrawMarkers(); updateOverview();
+        });
+
+        $('#stationFilter').change(function() {
+            currentFilter = $(this).val();
+            if (currentFilter === 'ALL') table.column(1).search('').draw(); else table.column(1).search(currentFilter).draw();
+            updateCharts();
+        });
+
+        db.ref('logs').orderByChild('timestamp').limitToLast(100).on('child_added', (snapshot) => {
+            const data = snapshot.val(); if (!data) return;
+            const stId = data.station_id || "ST-01"; const timeString = new Date(data.timestamp).toLocaleString('th-TH');
+
+            latestStationData[stId] = data; latestStationData['ALL_LATEST'] = data;
+            allLogsMemory.push(data); if(allLogsMemory.length > 200) allLogsMemory.shift(); 
+
+            if (currentFilter === 'ALL' || currentFilter === stId) {
+                $('#val-temp').text(data.temp); $('#val-pm25').text(data.pm25); $('#val-rain').text(data.rain); $('#val-wind').text(data.wind);
+                $('#last-update-time').html(`<i class="fa-regular fa-clock"></i> ล่าสุด: ${timeString} (${stId})`);
+            }
+
+            table.row.add([ timeString, `<span class="badge bg-secondary">${stId}</span>`, data.temp, data.pm25, data.rain, data.wind ]).draw(false);
+            updateCharts(); 
+
+            if (data.temp > 38 && data.pm25 > 100) {
+                $('#toastMessage').html(`🚨 พบความเสี่ยงไฟป่า!<br>สถานี: <b>${stId}</b><br>อุณหภูมิ: ${data.temp}°C, PM2.5: ${data.pm25}`);
+                const toast = new bootstrap.Toast(document.getElementById('alarmToast')); toast.show();
+                alarmSound.play().catch(e => {}); 
+            }
+            redrawMarkers(); updateOverview();
+        });
+        
+        setInterval(() => { redrawMarkers(); updateOverview(); }, 60000);
+    </script>
+</body>
+</html>
