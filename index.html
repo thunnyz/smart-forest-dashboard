@@ -27,8 +27,9 @@
         .sensor-icon { font-size: 3.5rem; opacity: 0.3; position: absolute; right: 20px; bottom: 20px; }
         @keyframes pulse-red { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255,71,87,0.7); } 70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(255,71,87,0); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255,71,87,0); } }
         .btn-pulsing { animation: pulse-red 2s infinite; }
-        .nav-pills .nav-link { color: #1e3c72; font-weight: bold; border-radius: 50px; padding: 10px 20px; margin-right: 10px; border: 1px solid #1e3c72; }
+        .nav-pills .nav-link { color: #1e3c72; font-weight: bold; border-radius: 50px; padding: 10px 20px; margin-right: 10px; border: 1px solid #1e3c72; margin-bottom: 5px; }
         .nav-pills .nav-link.active { background-color: #1e3c72; color: white; }
+        .summary-card { background: #f8f9fa; border-left: 5px solid #1e3c72; border-radius: 10px; padding: 15px; }
     </style>
 </head>
 <body>
@@ -54,7 +55,6 @@
                 <select id="stationFilter" class="form-select bg-light text-dark fw-bold border-0 shadow-sm rounded-pill px-3" style="width: auto; cursor: pointer;">
                     <option value="ALL">🌐 ดูข้อมูลทุกสถานี</option>
                 </select>
-                <!-- เพิ่มป้ายบอกสถานะแบตเตอรี่เครื่องล่าสุด -->
                 <div id="val-batt" class="badge bg-success fs-6 px-3 py-2 rounded-pill shadow-sm"><i class="fa-solid fa-battery-three-quarters"></i> --%</div>
                 <div id="last-update-time" class="badge bg-dark fs-6 px-3 py-2 rounded-pill"><i class="fa-regular fa-clock"></i> รอรับข้อมูล...</div>
             </div>
@@ -82,19 +82,19 @@
         <div class="content-container">
             <div class="row align-items-center mb-3">
                 <div class="col-md-3">
-                    <h4 class="m-0 fw-bold"><i class="fa-solid fa-map-location-dot text-primary"></i> แผนที่เครือข่ายสถานี</h4>
+                    <h4 class="m-0 fw-bold"><i class="fa-solid fa-map-location-dot text-primary"></i> แผนที่เครือข่าย</h4>
                 </div>
                 <div class="col-md-4 mt-2 mt-md-0">
-                    <!-- ช่องค้นหาสถานี -->
                     <div class="input-group shadow-sm">
                         <span class="input-group-text bg-white border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
                         <input type="text" id="searchMapInput" class="form-control border-start-0" placeholder="ค้นหารหัส หรือ ชื่อจุดติดตั้ง...">
                         <button class="btn btn-primary fw-bold" onclick="searchStation()">ค้นหา</button>
                     </div>
                 </div>
-                <!-- เพิ่มปุ่มโหลดข้อมูลสถานี (Excel) -->
                 <div class="col-md-5 mt-2 mt-md-0 text-md-end">
-                    <button onclick="exportStationsCSV()" class="btn btn-success fw-bold rounded-pill shadow-sm px-3 me-1"><i class="fa-solid fa-file-excel"></i> ส่งออกข้อมูลสถานี</button>
+                    <!-- ปุ่มเปิดโหมด Heatmap -->
+                    <button id="toggleHeatmapBtn" class="btn btn-danger fw-bold rounded-pill shadow-sm px-3 me-1"><i class="fa-solid fa-fire"></i> Heatmap</button>
+                    <button onclick="exportStationsCSV()" class="btn btn-success fw-bold rounded-pill shadow-sm px-3 me-1"><i class="fa-solid fa-file-excel"></i> พิกัด</button>
                     <button id="addModeBtn" class="btn btn-warning fw-bold rounded-pill shadow-sm px-3"><i class="fa-solid fa-thumbtack"></i> เพิ่มสถานี</button>
                 </div>
             </div>
@@ -103,28 +103,47 @@
             <div id="map"></div>
         </div>
 
-        <!-- แท็บ กราฟ Chart.js & ตารางข้อมูล -->
+        <!-- แท็บข้อมูลทั้งหมด -->
         <div class="content-container mb-5">
             <ul class="nav nav-pills mb-4" id="dataTab" role="tablist">
-                <li class="nav-item" role="presentation"><button class="nav-link active shadow-sm" data-bs-toggle="pill" data-bs-target="#tab-graph" type="button"><i class="fa-solid fa-chart-line"></i> กราฟแนวโน้ม</button></li>
+                <li class="nav-item" role="presentation"><button class="nav-link active shadow-sm" data-bs-toggle="pill" data-bs-target="#tab-graph" type="button"><i class="fa-solid fa-chart-line"></i> กราฟแนวโน้ม (20 ล่าสุด)</button></li>
                 <li class="nav-item" role="presentation"><button class="nav-link shadow-sm" data-bs-toggle="pill" data-bs-target="#tab-table" type="button"><i class="fa-solid fa-table-list"></i> ตารางประวัติ (Logs)</button></li>
+                <li class="nav-item" role="presentation"><button class="nav-link shadow-sm" data-bs-toggle="pill" data-bs-target="#tab-summary" type="button"><i class="fa-solid fa-file-invoice"></i> รายงานสรุปรายวัน</button></li>
             </ul>
 
             <div class="tab-content">
-                <!-- หน้ากราฟ -->
+                <!-- 1. หน้ากราฟ (เพิ่มลมและฝน) -->
                 <div class="tab-pane fade show active" id="tab-graph">
                     <div class="row">
-                        <div class="col-md-6 mb-4"><h5 class="fw-bold text-danger text-center"><i class="fa-solid fa-temperature-high"></i> กราฟอุณหภูมิ (°C)</h5><canvas id="tempChart" style="max-height: 300px;"></canvas></div>
-                        <div class="col-md-6 mb-4"><h5 class="fw-bold text-success text-center"><i class="fa-solid fa-smog"></i> กราฟ PM2.5 (ug/m3)</h5><canvas id="pmChart" style="max-height: 300px;"></canvas></div>
+                        <div class="col-md-6 mb-4"><h5 class="fw-bold text-danger text-center"><i class="fa-solid fa-temperature-high"></i> อุณหภูมิ (°C)</h5><canvas id="tempChart" style="max-height: 250px;"></canvas></div>
+                        <div class="col-md-6 mb-4"><h5 class="fw-bold text-success text-center"><i class="fa-solid fa-smog"></i> PM2.5 (ug/m3)</h5><canvas id="pmChart" style="max-height: 250px;"></canvas></div>
+                        <div class="col-md-6 mb-4"><h5 class="fw-bold text-primary text-center"><i class="fa-solid fa-cloud-rain"></i> ปริมาณน้ำฝน</h5><canvas id="rainChart" style="max-height: 250px;"></canvas></div>
+                        <div class="col-md-6 mb-4"><h5 class="fw-bold text-info text-center"><i class="fa-solid fa-wind"></i> ความเร็วลม (m/s)</h5><canvas id="windChart" style="max-height: 250px;"></canvas></div>
                     </div>
                 </div>
-                <!-- หน้าตาราง -->
+                
+                <!-- 2. หน้าตาราง -->
                 <div class="tab-pane fade" id="tab-table">
                     <div class="table-responsive">
                         <table id="logTable" class="table table-hover w-100 align-middle">
                             <thead class="table-dark"><tr><th>วัน-เวลา</th><th>รหัสสถานี</th><th>อุณหภูมิ (°C)</th><th>PM2.5</th><th>น้ำฝน</th><th>ลม (m/s)</th></tr></thead>
                             <tbody></tbody>
                         </table>
+                    </div>
+                </div>
+
+                <!-- 3. หน้ารายงานสรุปรายวัน -->
+                <div class="tab-pane fade" id="tab-summary">
+                    <h5 class="fw-bold text-primary mb-3"><i class="fa-solid fa-calendar-day"></i> สรุปข้อมูลประจำวัน (<span id="summary-date">วันนี้</span>)</h5>
+                    <div class="row g-3" id="summary-content">
+                        <div class="col-md-4"><div class="summary-card"><small class="text-muted">อุณหภูมิสูงสุด (Max Temp)</small><h3 id="sum-max-temp" class="text-danger fw-bold">--</h3></div></div>
+                        <div class="col-md-4"><div class="summary-card"><small class="text-muted">อุณหภูมิต่ำสุด (Min Temp)</small><h3 id="sum-min-temp" class="text-info fw-bold">--</h3></div></div>
+                        <div class="col-md-4"><div class="summary-card"><small class="text-muted">ฝุ่น PM2.5 สูงสุด (Max PM2.5)</small><h3 id="sum-max-pm" class="text-warning fw-bold">--</h3></div></div>
+                        <div class="col-md-4"><div class="summary-card"><small class="text-muted">ความเร็วลมสูงสุด (Max Wind)</small><h3 id="sum-max-wind" class="text-secondary fw-bold">--</h3></div></div>
+                        <div class="col-md-4"><div class="summary-card"><small class="text-muted">จำนวนบันทึกข้อมูลวันนี้</small><h3 id="sum-records" class="text-primary fw-bold">--</h3></div></div>
+                        <div class="col-md-4">
+                            <button onclick="window.print()" class="btn btn-outline-primary w-100 h-100 fw-bold"><i class="fa-solid fa-print"></i> พิมพ์รายงานนี้</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -152,6 +171,8 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- เพิ่มไลบรารี Leaflet Heatmap -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
@@ -168,9 +189,6 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <script>
-        // -----------------------------------------------------------
-        // การเชื่อมต่อ Firebase
-        // -----------------------------------------------------------
         const firebaseConfig = {
             databaseURL: "https://smart-forest-station-default-rtdb.asia-southeast1.firebasedatabase.app/"
         };
@@ -181,6 +199,8 @@
         let latestStationData = {}; 
         let stationMasterList = {}; 
         let allLogsMemory = []; 
+        let isHeatmapMode = false;
+        let heatLayer = null;
 
         const alarmSound = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
 
@@ -194,24 +214,66 @@
             order: [[0, 'desc']], language: { url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/th.json' }
         });
 
-        // --- ตั้งค่า Chart.js ---
+        // --- ตั้งค่า Chart.js ทั้ง 4 กราฟ ---
         const chartOptions = { responsive: true, maintainAspectRatio: false, scales: { x: { ticks: { maxRotation: 45, minRotation: 45 } } } };
         const tempChart = new Chart(document.getElementById('tempChart'), { type: 'line', data: { labels: [], datasets: [{ label: 'อุณหภูมิ (°C)', data: [], borderColor: '#ff4757', backgroundColor: 'rgba(255, 71, 87, 0.2)', borderWidth: 2, fill: true, tension: 0.3 }] }, options: chartOptions });
         const pmChart = new Chart(document.getElementById('pmChart'), { type: 'line', data: { labels: [], datasets: [{ label: 'PM2.5 (ug/m3)', data: [], borderColor: '#2ed573', backgroundColor: 'rgba(46, 213, 115, 0.2)', borderWidth: 2, fill: true, tension: 0.3 }] }, options: chartOptions });
+        const rainChart = new Chart(document.getElementById('rainChart'), { type: 'bar', data: { labels: [], datasets: [{ label: 'น้ำฝน (Analog)', data: [], backgroundColor: '#70a1ff' }] }, options: chartOptions });
+        const windChart = new Chart(document.getElementById('windChart'), { type: 'line', data: { labels: [], datasets: [{ label: 'ลม (m/s)', data: [], borderColor: '#eccc68', backgroundColor: 'rgba(236, 204, 104, 0.2)', borderWidth: 2, fill: true, tension: 0.3 }] }, options: chartOptions });
 
         function updateCharts() {
             let filterData = currentFilter === 'ALL' ? allLogsMemory : allLogsMemory.filter(d => (d.station_id || "ST-01") === currentFilter);
             let recentData = filterData.slice(-20); 
             let labels = recentData.map(d => new Date(d.timestamp).toLocaleTimeString('th-TH'));
+            
             tempChart.data.labels = labels; tempChart.data.datasets[0].data = recentData.map(d => d.temp); tempChart.update();
             pmChart.data.labels = labels; pmChart.data.datasets[0].data = recentData.map(d => d.pm25); pmChart.update();
+            rainChart.data.labels = labels; rainChart.data.datasets[0].data = recentData.map(d => d.rain); rainChart.update();
+            windChart.data.labels = labels; windChart.data.datasets[0].data = recentData.map(d => d.wind); windChart.update();
+            
+            updateDailySummary(); // คำนวณรายงานรายวันใหม่เมื่อข้อมูลเปลี่ยน
+        }
+
+        // --- ฟังก์ชันรายงานสรุปรายวัน ---
+        function updateDailySummary() {
+            const todayStr = new Date().toLocaleDateString('th-TH');
+            $('#summary-date').text(todayStr);
+            
+            let todayLogs = allLogsMemory.filter(d => new Date(d.timestamp).toLocaleDateString('th-TH') === todayStr);
+            if (currentFilter !== 'ALL') todayLogs = todayLogs.filter(d => (d.station_id || "ST-01") === currentFilter);
+
+            if(todayLogs.length > 0) {
+                let maxT = Math.max(...todayLogs.map(d => d.temp));
+                let minT = Math.min(...todayLogs.map(d => d.temp));
+                let maxP = Math.max(...todayLogs.map(d => d.pm25));
+                let maxW = Math.max(...todayLogs.map(d => d.wind));
+                
+                $('#sum-max-temp').text(maxT + ' °C');
+                $('#sum-min-temp').text(minT + ' °C');
+                $('#sum-max-pm').text(maxP + ' ug/m3');
+                $('#sum-max-wind').text(maxW + ' m/s');
+                $('#sum-records').text(todayLogs.length + ' ครั้ง');
+            } else {
+                $('#sum-max-temp').text('--'); $('#sum-min-temp').text('--'); $('#sum-max-pm').text('--'); $('#sum-max-wind').text('--'); $('#sum-records').text('0 ครั้ง');
+            }
         }
 
         // --- ตั้งค่าแผนที่ ---
         const map = L.map('map').setView([13.95, 101.75], 11);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
 
-        let mapMarkers = {}; let mapCircles = {}; let isAddMode = false;
+        let mapMarkers = {}; let mapCircles = {}; 
+
+        // ปุ่มสลับโหมด Heatmap
+        $('#toggleHeatmapBtn').click(function() {
+            isHeatmapMode = !isHeatmapMode;
+            if(isHeatmapMode) {
+                $(this).removeClass('btn-danger').addClass('btn-secondary').html('<i class="fa-solid fa-map"></i> ปิด Heatmap');
+            } else {
+                $(this).removeClass('btn-secondary').addClass('btn-danger').html('<i class="fa-solid fa-fire"></i> Heatmap');
+            }
+            redrawMarkers();
+        });
 
         $('#addModeBtn').click(function() {
             isAddMode = !isAddMode;
@@ -221,7 +283,6 @@
 
         map.on('click', function(e) {
             if (!isAddMode) return;
-            // แก้ Bug: ใช้ Date.now() ดึงตัวเลข 6 หลักสุดท้ายมาต่อท้าย ป้องกันรหัสซ้ำเมื่อมีการลบข้อมูล
             const autoId = 'ST-' + Date.now().toString().slice(-6);
             $('#stId').val(autoId); $('#stName').val(''); $('#stLat').val(e.latlng.lat.toFixed(6)); $('#stLng').val(e.latlng.lng.toFixed(6));
             $('#stationModal').modal('show'); $('#addModeBtn').click(); 
@@ -233,12 +294,10 @@
             .then(() => $('#stationModal').modal('hide'));
         });
 
-        // ฟังก์ชันลบสถานี 
         window.deleteStation = function(id) {
             if(confirm(`ลบสถานี ${id} ใช่หรือไม่?`)) db.ref('stations/' + id).remove();
         };
 
-        // ฟังก์ชันค้นหาสถานี
         window.searchStation = function() {
             const query = $('#searchMapInput').val().toLowerCase();
             if(!query) return;
@@ -253,30 +312,21 @@
         };
         $('#searchMapInput').keypress(function(e){ if(e.which == 13) searchStation(); });
 
-        // ฟังก์ชัน Export รายชื่อสถานีและพิกัดเป็น Excel (CSV)
         window.exportStationsCSV = function() {
-            let csvContent = "data:text/csv;charset=utf-8,\uFEFF"; // \uFEFF บังคับให้เปิดใน Excel ภาษาไทยไม่เพี้ยน
+            let csvContent = "data:text/csv;charset=utf-8,\uFEFF"; 
             csvContent += "รหัสสถานี,ชื่อจุดติดตั้ง,ละติจูด (Lat),ลองจิจูด (Lng),สถานะปัจจุบัน,เวลาอัปเดตล่าสุด\n";
-            
             const now = Date.now();
             for (const [id, data] of Object.entries(stationMasterList)) {
-                let status = "Offline";
-                let lastUpdate = "-";
-                const sensorData = latestStationData[id];
+                let status = "Offline"; let lastUpdate = "-"; const sensorData = latestStationData[id];
                 if (sensorData) {
                     if ((now - sensorData.timestamp) <= 600000) status = "Online";
                     lastUpdate = new Date(sensorData.timestamp).toLocaleString('th-TH');
                 }
                 csvContent += `${id},"${data.name}",${data.lat},${data.lng},${status},"${lastUpdate}"\n`;
             }
-            
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "Station_List_" + new Date().toISOString().split('T')[0] + ".csv");
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            const encodedUri = encodeURI(csvContent); const link = document.createElement("a");
+            link.setAttribute("href", encodedUri); link.setAttribute("download", "Station_List_" + new Date().toISOString().split('T')[0] + ".csv");
+            document.body.appendChild(link); link.click(); document.body.removeChild(link);
         };
 
         function updateOverview() {
@@ -290,50 +340,69 @@
 
         function redrawMarkers() {
             const now = Date.now();
-            for (const [id, data] of Object.entries(stationMasterList)) {
-                if(mapCircles[id]) map.removeLayer(mapCircles[id]); if(mapMarkers[id]) map.removeLayer(mapMarkers[id]);
+            
+            // ลบของเก่าออกให้หมด
+            for (let id in mapCircles) map.removeLayer(mapCircles[id]);
+            for (let id in mapMarkers) map.removeLayer(mapMarkers[id]);
+            if (heatLayer) map.removeLayer(heatLayer);
+            
+            mapCircles = {}; mapMarkers = {};
+            let heatDataArray = [];
 
+            for (const [id, data] of Object.entries(stationMasterList)) {
                 const sensorData = latestStationData[id];
                 let riskLevel = "🟢 ปกติ"; let riskColor = "#2ed573"; let statusText = "⚪ รอข้อมูล"; let timeStr = "-";
-                let t = "--", p = "--", r = "--", w = "--", b = "--"; // เพิ่มตัวแปรแบตเตอรี่
+                let t = "--", p = "--", r = "--", w = "--", b = "--"; 
+                let intensity = 0.1; // ความเข้ม Heatmap เริ่มต้น
 
                 if (sensorData) {
                     t = sensorData.temp; p = sensorData.pm25; r = sensorData.rain; w = sensorData.wind;
                     b = sensorData.battery !== undefined ? sensorData.battery : "--";
                     timeStr = new Date(sensorData.timestamp).toLocaleString('th-TH');
                     
-                    if (t > 40 && p > 150) { riskLevel = "🔴 วิกฤต"; riskColor = "#ff4757"; }
-                    else if (t > 38 || p > 100) { riskLevel = "🟠 เสี่ยงสูง"; riskColor = "#ffa502"; }
-                    else if (t >= 35) { riskLevel = "🟡 เฝ้าระวัง"; riskColor = "#eccc68"; }
+                    if (t > 40 && p > 150) { riskLevel = "🔴 วิกฤต"; riskColor = "#ff4757"; intensity = 1.0; }
+                    else if (t > 38 || p > 100) { riskLevel = "🟠 เสี่ยงสูง"; riskColor = "#ffa502"; intensity = 0.7; }
+                    else if (t >= 35) { riskLevel = "🟡 เฝ้าระวัง"; riskColor = "#eccc68"; intensity = 0.4; }
                     if ((now - sensorData.timestamp) > 600000) statusText = "🔴 Offline"; else statusText = "🟢 Online";
                 }
 
-                mapCircles[id] = L.circle([data.lat, data.lng], { color: riskColor, fillColor: riskColor, fillOpacity: 0.3, radius: 500 }).addTo(map);
+                // การวาดแผนที่ (ถ้าเปิดโหมด Heatmap จะไม่วาดวงกลม)
+                if (isHeatmapMode) {
+                    heatDataArray.push([data.lat, data.lng, intensity]);
+                } else {
+                    mapCircles[id] = L.circle([data.lat, data.lng], { color: riskColor, fillColor: riskColor, fillOpacity: 0.3, radius: 500 }).addTo(map);
+                }
                 
-                // ปุ่มลบ
-                let deleteBtnHtml = `<button class="btn btn-sm btn-danger w-100 rounded-pill mt-2" onclick="deleteStation('${id}')"><i class="fa-solid fa-trash"></i> ลบสถานี</button>`;
+                // ปุ่มลบ และ ปุ่ม Google Maps จริงจัง
+                let deleteBtnHtml = `<button class="btn btn-sm btn-outline-danger w-100 rounded-pill mt-2" onclick="deleteStation('${id}')"><i class="fa-solid fa-trash"></i> ลบสถานี</button>`;
 
-                // Popup (เพิ่มพิกัด, ปุ่ม Google Maps และสถานะแบตเตอรี่)
                 const popupContent = `
-                    <div class="text-center" style="min-width: 180px;">
-                        <h6 class="fw-bold mb-1">${data.name}</h6>
-                        <small class="text-muted">รหัส: ${id} | ${statusText}</small><hr class="my-2">
-                        <div class="text-start small mb-2">
-                            📍 <b>พิกัด:</b> ${data.lat.toFixed(5)}, ${data.lng.toFixed(5)}<br>
+                    <div class="text-center" style="min-width: 200px;">
+                        <h5 class="fw-bold mb-1 text-primary">${data.name}</h5>
+                        <span class="badge bg-secondary mb-2">รหัส: ${id} | ${statusText}</span><hr class="my-1">
+                        <div class="text-start small mb-3 lh-lg mt-2">
+                            📍 <b>พิกัด:</b> <span class="text-muted">${data.lat.toFixed(5)}, ${data.lng.toFixed(5)}</span><br>
                             🌡️ อุณหภูมิ: <b>${t}°C</b><br>
                             💨 PM2.5: <b>${p}</b><br>
-                            🌧️ ฝน: <b>${r}</b><br>
-                            🌬️ ลม: <b>${w} m/s</b><br>
+                            🌧️ ฝน: <b>${r}</b> &nbsp;&nbsp; 🌬️ ลม: <b>${w} m/s</b><br>
                             🔋 แบตเตอรี่: <b>${b}%</b><br>
                             🔥 สถานะ: <b>${riskLevel}</b><br>
                             🕒 ล่าสุด: <b>${timeStr}</b>
                         </div>
-                        <a href="https://maps.google.com/?q=${data.lat},${data.lng}" target="_blank" class="btn btn-sm btn-info w-100 rounded-pill text-white fw-bold mb-2">
-                            <i class="fa-solid fa-location-arrow"></i> นำทาง (Google Maps)
+                        <a href="https://maps.google.com/?q=${data.lat},${data.lng}" target="_blank" class="btn btn-primary w-100 rounded-pill text-white fw-bold mb-2 shadow-sm fs-6 py-2">
+                            <i class="fa-solid fa-location-dot fa-bounce"></i> เปิดนำทาง (Google Maps)
                         </a>
                         ${deleteBtnHtml}
                     </div>`;
                 mapMarkers[id] = L.marker([data.lat, data.lng]).addTo(map).bindPopup(popupContent);
+            }
+
+            // ถ้าเปิดโหมด Heatmap ให้วาดชั้นความร้อนลงไป
+            if (isHeatmapMode && heatDataArray.length > 0) {
+                heatLayer = L.heatLayer(heatDataArray, {
+                    radius: 50, blur: 25, maxZoom: 15, 
+                    gradient: {0.4: 'lime', 0.6: 'yellow', 0.8: 'orange', 1.0: 'red'}
+                }).addTo(map);
             }
         }
 
@@ -351,18 +420,17 @@
             updateCharts();
         });
 
-        db.ref('logs').orderByChild('timestamp').limitToLast(100).on('child_added', (snapshot) => {
+        db.ref('logs').orderByChild('timestamp').limitToLast(150).on('child_added', (snapshot) => {
             const data = snapshot.val(); if (!data) return;
             const stId = data.station_id || "ST-01"; const timeString = new Date(data.timestamp).toLocaleString('th-TH');
 
             latestStationData[stId] = data; latestStationData['ALL_LATEST'] = data;
-            allLogsMemory.push(data); if(allLogsMemory.length > 200) allLogsMemory.shift(); 
+            allLogsMemory.push(data); if(allLogsMemory.length > 300) allLogsMemory.shift(); 
 
             if (currentFilter === 'ALL' || currentFilter === stId) {
                 $('#val-temp').text(data.temp); $('#val-pm25').text(data.pm25); $('#val-rain').text(data.rain); $('#val-wind').text(data.wind);
                 $('#last-update-time').html(`<i class="fa-regular fa-clock"></i> ล่าสุด: ${timeString} (${stId})`);
                 
-                // อัปเดตแบตเตอรี่บนแถบด้านบน
                 let batt = data.battery !== undefined ? data.battery : "--";
                 $('#val-batt').html(`<i class="fa-solid fa-battery-three-quarters"></i> ${batt}%`);
                 if(batt !== "--") {
