@@ -65,8 +65,8 @@
 
         /* Map */
         #map { height: 320px; border-radius: 8px; width: 100%; background: #000; }
-        .leaflet-popup-content-wrapper { background: #1e293b; color: #f8fafc; border: 1px solid #334155; }
-        .leaflet-popup-tip { background: #1e293b; }
+        .leaflet-popup-content-wrapper { background: rgba(30, 41, 59, 0.9); color: #f8fafc; border: 1px solid #334155; backdrop-filter: blur(4px); }
+        .leaflet-popup-tip { background: rgba(30, 41, 59, 0.9); }
 
         /* Alerts List */
         .alerts-feed { height: 275px; overflow-y: auto; padding-right: 5px; }
@@ -225,7 +225,6 @@
                     <div class="panel h-100 d-flex flex-column">
                         <h6 class="panel-title">ALERTS</h6>
                         <div class="alerts-feed" id="alerts-container">
-                            <!-- JS จะเติมข้อมูลตรงนี้ -->
                             <div class="text-center text-muted small mt-4">กำลังโหลดข้อมูล...</div>
                         </div>
                     </div>
@@ -269,7 +268,7 @@
         </main>
     </div>
 
-    <!-- Modal เพิ่มสถานี (เหมือนเดิม แต่ใช้โทนสีเข้ม) -->
+    <!-- Modal เพิ่มสถานี -->
     <div class="modal fade" id="stationModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content bg-dark text-white border-secondary">
@@ -282,6 +281,16 @@
                         <button type="submit" class="btn btn-success w-100 fw-bold py-2">บันทึกข้อมูล</button>
                     </form>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification มุมขวาบน -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+        <div id="alarmToast" class="toast align-items-center text-white bg-danger border-0 shadow-lg" role="alert">
+            <div class="d-flex">
+                <div class="toast-body fw-bold fs-6" id="toastMessage">🚨 พบความเสี่ยงไฟป่า!</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
             </div>
         </div>
     </div>
@@ -396,10 +405,14 @@
             }
         }
 
-        // --- MAP (Leaflet Dark Mode) ---
+        // --- MAP (Leaflet Google Satellite Hybrid) ---
         const map = L.map('map', {zoomControl: false}).setView([13.95, 101.75], 11);
-        // ใช้ Dark Tile Layer เพื่อความสวยงามแบบ Command Center
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; OpenStreetMap & CartoDB' }).addTo(map);
+        
+        // ใช้แผนที่ภาพถ่ายดาวเทียมแบบ Hybrid (มีชื่อถนน/สถานที่ทับบนป่า)
+        L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', { 
+            maxZoom: 20, 
+            attribution: '&copy; Google Maps' 
+        }).addTo(map);
 
         $('#toggleHeatmapBtn').click(function() {
             isHeatmapMode = !isHeatmapMode;
@@ -464,7 +477,7 @@
             // คำนวณความเสี่ยงรวมของป่า
             for(let id in stationMasterList) {
                 let d = latestStationData[id]; if(!d) continue;
-                if((now - d.timestamp) > 600000) continue; // ข้ามตัวที่ออฟไลน์
+                if((now - d.timestamp) > 600000) continue; 
                 total++;
                 if(d.temp > 38 && d.pm25 > 100) high++;
                 else if(d.temp > 35 || d.pm25 > 50) med++;
@@ -501,13 +514,13 @@
 
                 if (isHeatmapMode) { heatData.push([data.lat, data.lng, i]); } 
                 else {
-                    // Custom Marker Icon
                     let mIcon = L.divIcon({ className: 'custom-marker', html: `<i class="fa-solid fa-location-dot fa-2x" style="color:${color}; text-shadow:0 0 10px ${color};"></i>`, iconSize: [30, 30], iconAnchor: [15, 30] });
                     let delBtn = isAdmin ? `<button class="btn btn-sm btn-outline-danger w-100 mt-2" onclick="deleteStation('${id}')"><i class="fa-solid fa-trash"></i> ลบ</button>` : '';
                     let pop = `<div style="min-width:180px; text-align:left;">
                         <h6 class="fw-bold mb-1" style="color:${color};">${data.name}</h6>
                         <small class="text-muted">${id} | ${st}</small><hr class="my-2 border-secondary">
                         <div class="small mb-2 lh-lg">
+                            📍 <b>พิกัด:</b> <span class="text-muted">${data.lat.toFixed(5)}, ${data.lng.toFixed(5)}</span><br>
                             🌡️ Temp: <b>${t}°C</b><br>💨 PM2.5: <b>${p}</b><br>🌧️ Rain: <b>${r}</b><br>🌬️ Wind: <b>${w} m/s</b><br>🔋 Batt: <b>${b}%</b><br>🔥 Status: <b>${risk}</b>
                         </div>
                         <a href="https://maps.google.com/?q=${data.lat},${data.lng}" target="_blank" class="btn btn-sm btn-primary w-100 mb-1"><i class="fa-solid fa-location-arrow"></i> นำทาง</a>
