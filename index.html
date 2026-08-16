@@ -91,6 +91,17 @@
         /* Login Screen */
         #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-dark); z-index: 9999; display: flex; align-items: center; justify-content: center; }
         .login-card { background: var(--panel-bg); padding: 40px; border-radius: 15px; border: 1px solid var(--border-color); box-shadow: 0 20px 40px rgba(0,0,0,0.5); width: 100%; max-width: 400px; }
+
+        /* Print Mode for PDF Report */
+        @media print {
+            body * { visibility: hidden; }
+            #view-reports, #view-reports * { visibility: visible; }
+            #view-reports { position: absolute; left: 0; top: 0; width: 100%; padding: 20px; }
+            .sidebar, .top-header, .header-actions, button { display: none !important; }
+            .panel { border: 1px solid #333; background: #fff !important; color: #000 !important; box-shadow: none; }
+            .text-muted { color: #555 !important; }
+            .bg-dark { background: #f8f9fa !important; color: #000 !important; border: 1px solid #ddd !important; }
+        }
     </style>
 </head>
 <body>
@@ -149,7 +160,7 @@
             <!-- ================= 1. THE ULTIMATE DASHBOARD ================= -->
             <div id="view-dashboard" class="view-section active">
                 
-                <!-- ROW 1: STAT CARDS (6 Columns) -->
+                <!-- ROW 1: STAT CARDS -->
                 <div class="row g-2 mb-3">
                     <div class="col-md-2"><div class="panel stat-card"><div class="stat-label">สถานี (Online)</div><div class="stat-value"><span id="stat-online" style="color:var(--accent-green);">0</span><span class="fs-6 text-muted">/<span id="stat-total">0</span></span></div><i class="fa-solid fa-satellite-dish stat-icon" style="color:var(--accent-green);"></i></div></div>
                     <div class="col-md-2"><div class="panel stat-card"><div class="stat-label">อุณหภูมิ (°C)</div><div class="stat-value" id="avg-temp" style="color:var(--accent-orange);">--</div><i class="fa-solid fa-temperature-half stat-icon" style="color:var(--accent-orange);"></i></div></div>
@@ -167,7 +178,6 @@
 
                 <!-- ROW 2: MAP & ALERTS GAUGE -->
                 <div class="row g-2 mb-3" id="map-container-row">
-                    <!-- LIVE MAP -->
                     <div class="col-lg-8">
                         <div class="panel p-2 position-relative h-100">
                             <div class="d-flex justify-content-between align-items-center mb-2 px-2 pt-1">
@@ -183,10 +193,7 @@
                             <div id="map"></div>
                         </div>
                     </div>
-                    
-                    <!-- RISK LEVEL & ALERTS -->
                     <div class="col-lg-4 d-flex flex-column gap-2">
-                        <!-- Gauge -->
                         <div class="panel text-center flex-shrink-0" style="padding: 10px;">
                             <h6 class="panel-title mb-0 border-0 text-start">RISK LEVEL</h6>
                             <div style="position: relative; width: 100%; max-width: 150px; margin: 0 auto;">
@@ -196,7 +203,6 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- Alerts -->
                         <div class="panel flex-grow-1 d-flex flex-column" style="padding: 15px;">
                             <h6 class="panel-title mb-2">ALERTS</h6>
                             <div id="alerts-container-dash" class="alerts-feed flex-grow-1" style="height: 180px;">
@@ -228,7 +234,7 @@
                 </div>
             </div>
 
-            <!-- ================= 3. ALERTS ALGORITHM (FULL) ================= -->
+            <!-- ================= 3. ALERTS ALGORITHM ================= -->
             <div id="view-alerts" class="view-section">
                 <div class="row g-3">
                     <div class="col-md-5">
@@ -256,13 +262,46 @@
                 </div>
             </div>
 
-            <!-- ================= 4. REPORTS ================= -->
+            <!-- ================= 4. REPORTS (อัปเกรดความละเอียด) ================= -->
             <div id="view-reports" class="view-section">
-                <div class="panel text-center py-5">
-                    <i class="fa-solid fa-file-invoice fs-1 text-muted mb-3"></i>
-                    <h5>ระบบออกรายงานสรุปอัตโนมัติ (Automated Reports)</h5>
-                    <p class="text-muted">ดาวน์โหลดข้อมูลภาพรวมเพื่อส่งงานผู้บังคับบัญชา</p>
-                    <button class="btn btn-outline-success mx-2 mt-3" onclick="exportStationsCSV()"><i class="fa-solid fa-file-excel"></i> Export Station CSV</button>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="panel h-100">
+                            <h6 class="panel-title"><i class="fa-solid fa-filter"></i> ตัวกรองรายงาน (Report Filters)</h6>
+                            <div class="mb-3">
+                                <label class="form-label text-muted small">เลือกสถานี</label>
+                                <select id="reportStationFilter" class="form-select bg-dark text-white border-secondary">
+                                    <option value="ALL">🌐 ทุกสถานี (All Stations)</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted small">วันที่เริ่มต้น</label>
+                                <input type="date" id="reportStartDate" class="form-control bg-dark text-white border-secondary">
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label text-muted small">วันที่สิ้นสุด</label>
+                                <input type="date" id="reportEndDate" class="form-control bg-dark text-white border-secondary">
+                            </div>
+                            <button class="btn btn-primary w-100 fw-bold py-2 mb-2" onclick="generateReportPreview()"><i class="fa-solid fa-magnifying-glass"></i> ประมวลผลรายงาน</button>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="panel h-100 d-flex flex-column">
+                            <h6 class="panel-title d-flex justify-content-between align-items-center mb-4">
+                                <span><i class="fa-solid fa-chart-pie"></i> สรุปผลรายงาน (Data Summary)</span>
+                                <div>
+                                    <button class="btn btn-sm btn-outline-danger me-1" onclick="exportReportPDF()"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+                                    <button class="btn btn-sm btn-outline-success" onclick="exportReportCSV()"><i class="fa-solid fa-file-csv"></i> CSV (Excel)</button>
+                                </div>
+                            </h6>
+                            <div id="report-preview-content" class="flex-grow-1">
+                                <div class="text-center text-muted mt-5 pt-4">
+                                    <i class="fa-solid fa-file-circle-check fs-1 mb-3 opacity-50"></i>
+                                    <p>ระบุตัวกรองและกด "ประมวลผลรายงาน" เพื่อวิเคราะห์ข้อมูล</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -333,7 +372,7 @@
         // ⚠️ ใส่ apiKey ของ Firebase ตรงนี้
         // ==========================================
         const firebaseConfig = {
-                apiKey: "AIzaSyBMW9SeWkYdrbU9byzphxpLd4JaAoIWKho",
+apiKey: "AIzaSyBMW9SeWkYdrbU9byzphxpLd4JaAoIWKho",
               authDomain: "smart-forest-station.firebaseapp.com",
               databaseURL: "https://smart-forest-station-default-rtdb.asia-southeast1.firebasedatabase.app",
               projectId: "smart-forest-station",
@@ -349,12 +388,16 @@
         let isHeatmapMode = false, isAddMode = false;
         const alarmSound = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
 
+        // --- Defaults for Reports ---
+        const todayStr = new Date().toISOString().split('T')[0];
+        $('#reportStartDate').val(todayStr);
+        $('#reportEndDate').val(todayStr);
+
         // --- SPA Navigation ---
         $('.nav-item').click(function(e) {
             e.preventDefault();
             let target = $(this).data('target');
             
-            // ถ้าเป็นปุ่ม Live Map หรือ Heatmap ให้อยู่ที่หน้า Dashboard แล้วเลื่อนจอลงมา
             if ($(this).data('mode') === 'live' || $(this).data('mode') === 'heat') {
                 target = 'view-dashboard';
                 isHeatmapMode = ($(this).data('mode') === 'heat');
@@ -393,13 +436,11 @@
         Chart.defaults.color = '#64748b'; Chart.defaults.font.family = 'Kanit';
         const hideLegend = { plugins: { legend: { display: false } } };
         
-        // Gauge
         const gaugeChart = new Chart(document.getElementById('gaugeChart'), {
             type: 'doughnut', data: { labels: ['ต่ำ', 'ปานกลาง', 'สูง'], datasets: [{ data: [33.3, 33.3, 33.4], backgroundColor: ['#10b981', '#f59e0b', '#ef4444'], borderWidth: 0 }] },
             options: { rotation: -90, circumference: 180, cutout: '80%', plugins: { legend: { display: false }, tooltip: { enabled: false } }, animation: { animateRotate: true } }
         });
 
-        // Minis
         const createMiniChart = (id, color, fillBg) => new Chart(document.getElementById(id), {
             type: 'line', data: { labels: [], datasets: [{ data: [], borderColor: color, backgroundColor: fillBg, borderWidth: 2, fill: true, tension: 0.3, pointRadius: 0 }] },
             options: { ...hideLegend, responsive: true, maintainAspectRatio: false, scales: { x: { display: false }, y: { border: {display: false}, grid: {color: 'rgba(255,255,255,0.02)'} } } }
@@ -428,18 +469,16 @@
         // --- Risk Algorithm ---
         function calculateRisk(t, p, h, w) {
             let score = 0;
-            score += (t / 45) * 40;     // อุณหภูมิ มีผล 40%
-            score += (Math.min(p, 200) / 200) * 30; // PM2.5 มีผล 30%
-            score += ((100 - h) / 100) * 15; // ความชื้นยิ่งต่ำยิ่งเสี่ยง มีผล 15%
-            score += (Math.min(w, 20) / 20) * 15; // ลม มีผล 15%
+            score += (t / 45) * 40;     
+            score += (Math.min(p, 200) / 200) * 30; 
+            score += ((100 - h) / 100) * 15; 
+            score += (Math.min(w, 20) / 20) * 15; 
             return Math.max(0, Math.min(100, Math.round(score)));
         }
 
         // --- Core Data Processor ---
         function processData() {
             let dataArr = currentFilter === 'ALL' ? allLogsMemory : allLogsMemory.filter(d => (d.station_id || "ST-00") === currentFilter);
-            
-            // 1. Update Charts
             let chartData = dataArr.slice(-20);
             let labels = chartData.map(d => new Date(d.timestamp).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}));
             [tempChart, pmChart, humChart, windChart].forEach(c => c.data.labels = labels);
@@ -448,10 +487,7 @@
             humChart.data.datasets[0].data = chartData.map(d => d.hum); humChart.update();
             windChart.data.datasets[0].data = chartData.map(d => d.wind); windChart.update();
             
-            // 2. Dashboard Stats
-            let on=0, tot=0, sumT=0, sumH=0, sumW=0, maxP=0, sumScore=0, validSt=0;
-            const now = Date.now();
-            
+            let on=0, tot=0, sumT=0, sumH=0, sumW=0, maxP=0, sumScore=0, validSt=0; const now = Date.now();
             for (const [id, st] of Object.entries(stationMasterList)) {
                 tot++; const d = latestStationData[id];
                 if(d && (now - d.timestamp) <= 600000) {
@@ -478,21 +514,14 @@
                 else if(avgRisk > 50) { rText = "HIGH 🟠"; rColor = "var(--accent-orange)"; gText = "เสี่ยง"; }
                 else if(avgRisk > 30) { rText = "WATCH 🟡"; rColor = "#facc15"; gText = "เฝ้าระวัง"; }
                 
-                $('#fire-risk-text').text(rText).css('color', rColor);
-                $('#fire-risk-score').css('color', rColor);
+                $('#fire-risk-text').text(rText).css('color', rColor); $('#fire-risk-score').css('color', rColor);
                 $('#fire-risk-panel').css({'background': `rgba(${rColor==='var(--accent-red)'?'239,68,68':(rColor==='var(--accent-orange)'?'245,158,11':'16,185,129')}, 0.05)`, 'border-color': rColor});
                 $('#algo-score-display').css('color', rColor);
-                
-                // Gauge Update
                 gaugeChart.data.datasets[0].backgroundColor = (avgRisk > 75) ? ['#1e293b','#1e293b', '#ef4444'] : (avgRisk > 50) ? ['#1e293b', '#f59e0b', '#1e293b'] : ['#10b981', '#1e293b', '#1e293b'];
-                gaugeChart.update();
-                $('#gauge-text-th').text(gText).css('color', rColor);
+                gaugeChart.update(); $('#gauge-text-th').text(gText).css('color', rColor);
             }
 
-            // 3. Alerts Feed Builders
-            let feedHTML = '';
-            let recentLogs = [...allLogsMemory].reverse().slice(0, 15);
-            let addedIds = new Set();
+            let feedHTML = ''; let recentLogs = [...allLogsMemory].reverse().slice(0, 15); let addedIds = new Set();
             for(let log of recentLogs) {
                 if(addedIds.has(log.station_id)) continue; addedIds.add(log.station_id);
                 let r = calculateRisk(log.temp, log.pm25, log.hum, log.wind);
@@ -532,22 +561,85 @@
             if (isHeatmapMode && heatData.length > 0) heatLayer = L.heatLayer(heatData, {radius: 40, blur: 20, maxZoom: 15, gradient: {0.4: 'lime', 0.6: 'orange', 1.0: 'red'}}).addTo(map);
         }
 
-        window.exportStationsCSV = () => { alert("ระบบกำลังสร้างไฟล์ Data_Logs.csv..."); };
+        // ================= REPORTS SYSTEM =================
+        let currentReportLogs = [];
+        window.generateReportPreview = function() {
+            let stFilter = $('#reportStationFilter').val();
+            let sDate = new Date($('#reportStartDate').val() + 'T00:00:00').getTime();
+            let eDate = new Date($('#reportEndDate').val() + 'T23:59:59').getTime();
 
+            currentReportLogs = allLogsMemory.filter(log => {
+                let matchSt = (stFilter === 'ALL' || log.station_id === stFilter);
+                let matchDate = (log.timestamp >= sDate && log.timestamp <= eDate);
+                return matchSt && matchDate;
+            });
+
+            if(currentReportLogs.length === 0) {
+                $('#report-preview-content').html('<div class="text-center text-muted mt-5 pt-4"><i class="fa-solid fa-folder-open fs-1 mb-3 opacity-50"></i><p>ไม่พบข้อมูลในช่วงเวลาหรือสถานีที่เลือก</p></div>');
+                return;
+            }
+
+            let maxT=0, maxP=0, sumT=0, sumH=0, alerts=0;
+            currentReportLogs.forEach(d => {
+                if(d.temp > maxT) maxT = d.temp; if(d.pm25 > maxP) maxP = d.pm25;
+                sumT += d.temp; sumH += (d.hum||60);
+                if(calculateRisk(d.temp, d.pm25, (d.hum||60), d.wind) > 75) alerts++;
+            });
+
+            let html = `
+                <div class="row g-2 text-center mb-4 mt-2">
+                    <div class="col-md-3"><div class="p-3 bg-dark rounded border border-secondary"><div class="text-muted small">อุณหภูมิสูงสุด</div><h4 class="text-orange mb-0">${maxT}°C</h4></div></div>
+                    <div class="col-md-3"><div class="p-3 bg-dark rounded border border-secondary"><div class="text-muted small">PM2.5 สูงสุด</div><h4 class="text-green mb-0">${maxP}</h4></div></div>
+                    <div class="col-md-3"><div class="p-3 bg-dark rounded border border-secondary"><div class="text-muted small">บันทึกความเสี่ยงวิกฤต</div><h4 class="text-danger mb-0">${alerts} ครั้ง</h4></div></div>
+                    <div class="col-md-3"><div class="p-3 bg-dark rounded border border-secondary"><div class="text-muted small">จำนวน Log ทั้งหมด</div><h4 class="text-info mb-0">${currentReportLogs.length}</h4></div></div>
+                </div>
+                <h6 class="text-muted small mb-2"><i class="fa-solid fa-list"></i> ตัวอย่างข้อมูล (5 รายการล่าสุด)</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-dark table-hover text-center align-middle" style="font-size: 0.85rem;">
+                        <thead><tr><th>วัน-เวลา</th><th>สถานี</th><th>อุณหภูมิ</th><th>PM2.5</th><th>ความชื้น</th><th>ระดับความเสี่ยง</th></tr></thead>
+                        <tbody>
+                            ${currentReportLogs.slice(-5).reverse().map(d => {
+                                let r = calculateRisk(d.temp, d.pm25, (d.hum||60), d.wind);
+                                let st = r > 75 ? '<span class="badge bg-danger">วิกฤต</span>' : (r > 50 ? '<span class="badge bg-warning text-dark">เสี่ยง</span>' : '<span class="badge bg-success">ปกติ</span>');
+                                return `<tr><td>${new Date(d.timestamp).toLocaleString('th-TH')}</td><td>${d.station_id || 'ST-00'}</td><td>${d.temp}</td><td>${d.pm25}</td><td>${d.hum||60}</td><td>${st}</td></tr>`;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            $('#report-preview-content').html(html);
+        };
+
+        window.exportReportCSV = function() {
+            if(currentReportLogs.length === 0) return alert('กรุณากดดูตัวอย่างรายงานก่อนดาวน์โหลด CSV');
+            let csv = "data:text/csv;charset=utf-8,\uFEFFวัน-เวลา,สถานี,อุณหภูมิ,PM2.5,ความชื้น,ความเร็วลม,คะแนนความเสี่ยง\n";
+            currentReportLogs.forEach(d => {
+                let rScore = calculateRisk(d.temp, d.pm25, (d.hum||60), d.wind);
+                csv += `"${new Date(d.timestamp).toLocaleString('th-TH')}",${d.station_id||'ST-00'},${d.temp},${d.pm25},${d.hum||60},${d.wind},${rScore}\n`;
+            });
+            const link = document.createElement("a"); link.href = encodeURI(csv); link.download = `Smart_Forest_Report_${Date.now()}.csv`; document.body.appendChild(link); link.click(); link.remove();
+        };
+
+        window.exportReportPDF = function() { window.print(); };
+
+        // --- Firebase Init ---
         if (db) {
             db.ref('stations').on('value', snap => {
                 stationMasterList = snap.val() || {};
-                $('#stationFilter').find('option:not(:first)').remove();
-                for (const [id, data] of Object.entries(stationMasterList)) { $('#stationFilter').append(`<option value="${id}">${data.name} (${id})</option>`); }
+                $('#stationFilter, #reportStationFilter').find('option:not(:first)').remove();
+                for (const [id, data] of Object.entries(stationMasterList)) { 
+                    $('#stationFilter').append(`<option value="${id}">${data.name} (${id})</option>`); 
+                    $('#reportStationFilter').append(`<option value="${id}">${data.name} (${id})</option>`); 
+                }
                 redrawMarkers(); processData();
             });
 
             db.ref('logs').orderByChild('timestamp').limitToLast(100).on('child_added', snap => {
                 const data = snap.val(); if (!data) return;
                 const id = data.station_id || "ST-00"; 
-                data.hum = data.hum !== undefined ? data.hum : (Math.floor(Math.random() * 15) + 45); // Mock RH if missing
+                data.hum = data.hum !== undefined ? data.hum : (Math.floor(Math.random() * 15) + 45); 
                 
-                latestStationData[id] = data; allLogsMemory.push(data); if(allLogsMemory.length > 200) allLogsMemory.shift(); 
+                latestStationData[id] = data; allLogsMemory.push(data); if(allLogsMemory.length > 300) allLogsMemory.shift(); 
                 $('#last-update-time').html(`<i class="fa-regular fa-clock"></i> อัปเดต: ${new Date(data.timestamp).toLocaleTimeString('th-TH')}`);
                 
                 let tStr = new Date(data.timestamp).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
