@@ -3,407 +3,482 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Forest Command Center</title>
+    <title>SMART FOREST COMMAND CENTER</title>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- CSS Libraries -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.3.6/css/buttons.bootstrap5.min.css">
 
     <style>
-        body { background-color: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow-x: hidden; }
-        
-        /* หน้า Login */
-        #login-screen { height: 100vh; background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); display: flex; align-items: center; justify-content: center; }
-        .login-card { background: rgba(255, 255, 255, 0.95); padding: 40px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); width: 100%; max-width: 420px; }
+        /* === Dark Theme Variables === */
+        :root {
+            --bg-dark: #0b111e;
+            --panel-bg: #151c2c;
+            --sidebar-bg: #0d1424;
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --accent-orange: #f59e0b;
+            --accent-blue: #3b82f6;
+            --border-color: rgba(255,255,255,0.05);
+        }
 
-        /* Dashboard */
-        .dashboard-header { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; padding: 25px 0; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-radius: 0 0 20px 20px; }
-        .content-container { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.04); margin-bottom: 30px; }
-        #map { height: 450px; border-radius: 15px; z-index: 1; border: 3px solid transparent; transition: all 0.3s ease; }
-        .map-active { border-color: #ff4757 !important; cursor: crosshair !important; box-shadow: 0 0 15px rgba(255, 71, 87, 0.4); }
-        .sensor-card { border: none; border-radius: 15px; color: white; padding: 20px; transition: transform 0.3s; }
-        .sensor-card:hover { transform: translateY(-5px); }
-        .bg-temp { background: linear-gradient(135deg, #ff6b81 0%, #ff4757 100%); }
-        .bg-pm25 { background: linear-gradient(135deg, #7bed9f 0%, #2ed573 100%); }
-        .bg-rain { background: linear-gradient(135deg, #70a1ff 0%, #1e90ff 100%); }
-        .bg-wind { background: linear-gradient(135deg, #eccc68 0%, #ffa502 100%); }
-        .value-text { font-size: clamp(1.5rem, 5vw, 2.8rem); font-weight: 800; line-height: 1; margin: 10px 0; }
-        .sensor-icon { font-size: 3.5rem; opacity: 0.3; position: absolute; right: 20px; bottom: 20px; }
-        @keyframes pulse-red { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255,71,87,0.7); } 70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(255,71,87,0); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255,71,87,0); } }
-        .btn-pulsing { animation: pulse-red 2s infinite; }
-        .nav-pills .nav-link { color: #1e3c72; font-weight: bold; border-radius: 50px; padding: 10px 20px; margin-right: 10px; border: 1px solid #1e3c72; margin-bottom: 5px; }
-        .nav-pills .nav-link.active { background-color: #1e3c72; color: white; }
-        .summary-card { background: #f8f9fa; border-left: 5px solid #1e3c72; border-radius: 10px; padding: 15px; }
+        body { background-color: var(--bg-dark); color: var(--text-main); font-family: 'Kanit', sans-serif; overflow-x: hidden; margin: 0; }
         
-        body.guest-mode .dt-buttons { display: none !important; }
-        body.guest-mode .export-btn { display: none !important; }
+        /* === Layout === */
+        .app-container { display: flex; height: 100vh; overflow: hidden; }
+        
+        /* Sidebar */
+        .sidebar { width: 90px; background: var(--sidebar-bg); display: flex; flex-direction: column; align-items: center; padding-top: 20px; border-right: 1px solid var(--border-color); z-index: 1000; }
+        .sidebar-logo { color: var(--accent-green); font-size: 2rem; margin-bottom: 5px; text-shadow: 0 0 10px rgba(16, 185, 129, 0.5); }
+        .sidebar-logo-text { font-size: 0.7rem; color: var(--accent-green); font-weight: bold; margin-bottom: 30px; }
+        .nav-icon { color: var(--text-muted); font-size: 1.2rem; margin-bottom: 5px; transition: 0.3s; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; margin-bottom: 25px; cursor: pointer; text-decoration: none; color: var(--text-muted); font-size: 0.7rem; }
+        .nav-item:hover, .nav-item.active { color: var(--text-main); }
+        .nav-item:hover .nav-icon, .nav-item.active .nav-icon { color: var(--text-main); transform: scale(1.1); }
+
+        /* Main Content */
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; padding: 15px 25px; }
+        
+        /* Top Header */
+        .top-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; border-bottom: 1px solid var(--border-color); margin-bottom: 20px; }
+        .header-title { font-size: 1.2rem; font-weight: 800; letter-spacing: 1px; color: var(--text-main); margin: 0; }
+        .header-actions { display: flex; gap: 15px; align-items: center; }
+        
+        /* Panels / Cards */
+        .panel { background: var(--panel-bg); border-radius: 12px; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); border: 1px solid var(--border-color); }
+        .panel-title { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-bottom: 15px; letter-spacing: 0.5px; }
+        
+        /* Top Stat Cards */
+        .stat-card { display: flex; flex-direction: column; justify-content: space-between; height: 100px; position: relative; overflow: hidden; }
+        .stat-value { font-size: 2rem; font-weight: 800; line-height: 1; }
+        .stat-label { font-size: 0.8rem; color: var(--text-muted); }
+        .stat-icon { position: absolute; right: 15px; top: 15px; font-size: 1.5rem; opacity: 0.5; }
+        .glow-green { text-shadow: 0 0 15px rgba(16, 185, 129, 0.4); color: var(--accent-green); }
+        .glow-orange { text-shadow: 0 0 15px rgba(245, 158, 11, 0.4); color: var(--accent-orange); }
+        .glow-blue { text-shadow: 0 0 15px rgba(59, 130, 246, 0.4); color: var(--accent-blue); }
+
+        /* Map */
+        #map { height: 320px; border-radius: 8px; width: 100%; background: #000; }
+        .leaflet-popup-content-wrapper { background: #1e293b; color: #f8fafc; border: 1px solid #334155; }
+        .leaflet-popup-tip { background: #1e293b; }
+
+        /* Alerts List */
+        .alerts-feed { height: 275px; overflow-y: auto; padding-right: 5px; }
+        .alerts-feed::-webkit-scrollbar { width: 5px; }
+        .alerts-feed::-webkit-scrollbar-thumb { background: #334155; border-radius: 5px; }
+        .alert-item { display: flex; gap: 15px; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid var(--border-color); }
+        .alert-icon { width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; }
+        .alert-bg-red { background: rgba(239, 68, 68, 0.2); color: var(--accent-red); }
+        .alert-bg-orange { background: rgba(245, 158, 11, 0.2); color: var(--accent-orange); }
+        .alert-bg-green { background: rgba(16, 185, 129, 0.2); color: var(--accent-green); }
+        .alert-content h6 { margin: 0; font-size: 0.9rem; font-weight: 600; }
+        .alert-content p { margin: 0; font-size: 0.75rem; color: var(--text-muted); }
+        .alert-time { font-size: 0.7rem; color: var(--text-muted); white-space: nowrap; }
+
+        /* Charts Section */
+        .mini-chart-container { height: 120px; width: 100%; }
+        .chart-header { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; margin-bottom: 5px; color: var(--text-muted); }
+
+        /* Custom Buttons for Dark Mode */
+        .btn-dark-custom { background: #1e293b; color: white; border: 1px solid #334155; }
+        .btn-dark-custom:hover { background: #334155; color: white; }
+
+        /* Login Screen Overlay */
+        #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(11, 17, 30, 0.95); z-index: 9999; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
+        .login-card { background: var(--panel-bg); padding: 40px; border-radius: 15px; border: 1px solid var(--border-color); box-shadow: 0 20px 40px rgba(0,0,0,0.5); width: 100%; max-width: 400px; color: white; }
     </style>
 </head>
 <body>
 
-    <!-- ================= 1. หน้าจอ Login (Landing Page) ================= -->
+    <!-- ================= LOGIN SCREEN ================= -->
     <div id="login-screen">
         <div class="login-card">
             <div class="text-center mb-4">
-                <h2 class="fw-bold text-primary"><i class="fa-solid fa-satellite-dish"></i> Smart Forest</h2>
-                <p class="text-muted">ศูนย์บัญชาการเฝ้าระวังไฟป่าอัจฉริยะ</p>
+                <i class="fa-solid fa-tree text-success fs-1 mb-2 glow-green"></i>
+                <h4 class="fw-bold">COMMAND CENTER</h4>
+                <p class="text-muted small">ระบบบัญชาการเฝ้าระวังไฟป่าอัจฉริยะ</p>
             </div>
-            
             <form id="loginForm">
                 <div class="mb-3">
-                    <label class="form-label fw-bold">อีเมลผู้ดูแลระบบ</label>
-                    <div class="input-group">
-                        <span class="input-group-text bg-white"><i class="fa-solid fa-envelope text-muted"></i></span>
-                        <input type="email" id="adminEmail" class="form-control" required placeholder="admin@example.com">
-                    </div>
+                    <label class="form-label small text-muted">EMAIL (ผู้ดูแลระบบ)</label>
+                    <input type="email" id="adminEmail" class="form-control bg-dark text-white border-secondary" required>
                 </div>
                 <div class="mb-4">
-                    <label class="form-label fw-bold">รหัสผ่าน</label>
-                    <div class="input-group">
-                        <span class="input-group-text bg-white"><i class="fa-solid fa-lock text-muted"></i></span>
-                        <input type="password" id="adminPwd" class="form-control" required placeholder="******">
-                    </div>
+                    <label class="form-label small text-muted">PASSWORD</label>
+                    <input type="password" id="adminPwd" class="form-control bg-dark text-white border-secondary" required>
                 </div>
-                <button type="submit" class="btn btn-primary w-100 fw-bold rounded-pill py-2 shadow-sm">
-                    <i class="fa-solid fa-right-to-bracket"></i> เข้าสู่ระบบ (Admin)
-                </button>
+                <button type="submit" class="btn btn-success w-100 fw-bold py-2 mb-3">เข้าสู่ระบบ (ADMIN)</button>
+                <button type="button" id="guestBtn" class="btn btn-outline-secondary w-100 py-2 small">เข้าชมโหมดบุคคลทั่วไป (VIEW ONLY)</button>
             </form>
-
-            <div class="text-center my-3 text-muted small position-relative">
-                <hr>
-                <span class="bg-white px-2 position-absolute top-50 start-50 translate-middle">หรือ</span>
-            </div>
-
-            <button id="guestBtn" class="btn btn-outline-secondary w-100 fw-bold rounded-pill py-2">
-                <i class="fa-solid fa-eye"></i> เข้าชมแบบบุคคลทั่วไป (View Only)
-            </button>
-        </div>
-    </div>
-    <!-- ===================================================================== -->
-
-    <!-- ================= 2. หน้าจอ Dashboard (ซ่อนไว้ก่อน) ================= -->
-    <div id="main-dashboard" style="display: none;">
-        <!-- Toast Notification มุมขวาบน -->
-        <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
-            <div id="alarmToast" class="toast align-items-center text-white bg-danger border-0 shadow-lg" role="alert">
-                <div class="d-flex">
-                    <div class="toast-body fw-bold fs-6" id="toastMessage">🚨 พบความเสี่ยงไฟป่า!</div>
-                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Header -->
-        <div class="dashboard-header">
-            <div class="container d-flex justify-content-between align-items-center flex-wrap gap-3">
-                <div>
-                    <h2 class="mb-0 fw-bold"><i class="fa-solid fa-satellite-dish text-warning"></i> Smart Forest Center</h2>
-                    <span class="opacity-75">ระบบบัญชาการเครือข่ายเซนเซอร์เฝ้าระวังไฟป่าอัจฉริยะ</span>
-                    <span id="adminBadge" class="badge bg-danger ms-2 shadow-sm" style="display:none;"><i class="fa-solid fa-user-shield"></i> Admin Mode</span>
-                    <span id="guestBadge" class="badge bg-secondary ms-2 shadow-sm" style="display:none;"><i class="fa-solid fa-eye"></i> View Only</span>
-                </div>
-                <div class="d-flex align-items-center gap-2">
-                    <select id="stationFilter" class="form-select bg-light text-dark fw-bold border-0 shadow-sm rounded-pill px-3" style="width: auto; cursor: pointer;">
-                        <option value="ALL">🌐 ดูข้อมูลทุกสถานี</option>
-                    </select>
-                    <div id="val-batt" class="badge bg-success fs-6 px-3 py-2 rounded-pill shadow-sm"><i class="fa-solid fa-battery-three-quarters"></i> --%</div>
-                    <div id="last-update-time" class="badge bg-dark fs-6 px-3 py-2 rounded-pill"><i class="fa-regular fa-clock"></i> รอรับข้อมูล...</div>
-                    <button id="logoutBtn" class="btn btn-danger btn-sm fw-bold rounded-pill ms-2 shadow-sm" style="display:none;"><i class="fa-solid fa-right-from-bracket"></i> ออกจากระบบ</button>
-                    <button id="backToLoginBtn" class="btn btn-outline-light btn-sm fw-bold rounded-pill ms-2 shadow-sm" style="display:none;"><i class="fa-solid fa-arrow-left"></i> กลับหน้าล็อกอิน</button>
-                </div>
-            </div>
-        </div>
-
-        <div class="container">
-            <!-- ภาพรวม (Overview) -->
-            <div class="row g-2 mb-3 text-center">
-                <div class="col-md-3 col-6"><div class="bg-white p-2 rounded shadow-sm border-start border-primary border-4"><small class="text-muted fw-bold">📡 สถานีทั้งหมด</small><h4 id="stat-total" class="mb-0 fw-bold text-primary">0</h4></div></div>
-                <div class="col-md-3 col-6"><div class="bg-white p-2 rounded shadow-sm border-start border-success border-4"><small class="text-muted fw-bold">🟢 Online</small><h4 id="stat-online" class="mb-0 fw-bold text-success">0</h4></div></div>
-                <div class="col-md-3 col-6"><div class="bg-white p-2 rounded shadow-sm border-start border-secondary border-4"><small class="text-muted fw-bold">🔴 Offline</small><h4 id="stat-offline" class="mb-0 fw-bold text-secondary">0</h4></div></div>
-                <div class="col-md-3 col-6"><div class="bg-white p-2 rounded shadow-sm border-start border-danger border-4"><small class="text-muted fw-bold">🔥 เสี่ยงไฟป่า</small><h4 id="stat-risk" class="mb-0 fw-bold text-danger">0</h4></div></div>
-            </div>
-
-            <!-- หน้าปัดเซนเซอร์ -->
-            <div class="row g-3 mb-4">
-                <div class="col-md-3 col-6"><div class="sensor-card bg-temp position-relative shadow"><h6>อุณหภูมิ (°C)</h6><div class="value-text" id="val-temp">--</div><i class="fa-solid fa-temperature-high sensor-icon"></i></div></div>
-                <div class="col-md-3 col-6"><div class="sensor-card bg-pm25 position-relative shadow"><h6>PM2.5 (ug/m3)</h6><div class="value-text" id="val-pm25">--</div><i class="fa-solid fa-smog sensor-icon"></i></div></div>
-                <div class="col-md-3 col-6"><div class="sensor-card bg-rain position-relative shadow"><h6>ค่าน้ำฝน (0-1024)</h6><div class="value-text" id="val-rain">--</div><i class="fa-solid fa-cloud-rain sensor-icon"></i></div></div>
-                <div class="col-md-3 col-6"><div class="sensor-card bg-wind position-relative shadow"><h6>ความเร็วลม (m/s)</h6><div class="value-text" id="val-wind">--</div><i class="fa-solid fa-wind sensor-icon"></i></div></div>
-            </div>
-
-            <!-- แผนที่ & ค้นหา -->
-            <div class="content-container">
-                <div class="row align-items-center mb-3">
-                    <div class="col-md-3"><h4 class="m-0 fw-bold"><i class="fa-solid fa-map-location-dot text-primary"></i> แผนที่เครือข่าย</h4></div>
-                    <div class="col-md-4 mt-2 mt-md-0">
-                        <div class="input-group shadow-sm">
-                            <span class="input-group-text bg-white border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
-                            <input type="text" id="searchMapInput" class="form-control border-start-0" placeholder="ค้นหารหัส หรือ ชื่อจุดติดตั้ง...">
-                            <button class="btn btn-primary fw-bold" onclick="searchStation()">ค้นหา</button>
-                        </div>
-                    </div>
-                    <div class="col-md-5 mt-2 mt-md-0 text-md-end">
-                        <button id="toggleHeatmapBtn" class="btn btn-danger fw-bold rounded-pill shadow-sm px-3 me-1"><i class="fa-solid fa-fire"></i> Heatmap</button>
-                        <button onclick="exportStationsCSV()" class="btn btn-success fw-bold rounded-pill shadow-sm px-3 me-1 export-btn"><i class="fa-solid fa-file-excel"></i> พิกัด</button>
-                        <button id="addModeBtn" class="btn btn-warning fw-bold rounded-pill shadow-sm px-3 admin-only" style="display:none;"><i class="fa-solid fa-thumbtack"></i> เพิ่มสถานี</button>
-                    </div>
-                </div>
-                <div id="instructionBox" class="alert alert-danger fw-bold shadow-sm" style="display:none;"><i class="fa-solid fa-hand-pointer fa-bounce"></i> จิ้มลงบนแผนที่จุดที่ต้องการติดตั้ง เพื่อบันทึกพิกัดสถานีใหม่!</div>
-                <div id="map"></div>
-            </div>
-
-            <!-- แท็บข้อมูลทั้งหมด -->
-            <div class="content-container mb-5">
-                <ul class="nav nav-pills mb-4" id="dataTab" role="tablist">
-                    <li class="nav-item" role="presentation"><button class="nav-link active shadow-sm" data-bs-toggle="pill" data-bs-target="#tab-graph" type="button"><i class="fa-solid fa-chart-line"></i> กราฟแนวโน้ม (20 ล่าสุด)</button></li>
-                    <li class="nav-item" role="presentation"><button class="nav-link shadow-sm" data-bs-toggle="pill" data-bs-target="#tab-table" type="button"><i class="fa-solid fa-table-list"></i> ตารางประวัติ (Logs)</button></li>
-                    <li class="nav-item" role="presentation"><button class="nav-link shadow-sm" data-bs-toggle="pill" data-bs-target="#tab-summary" type="button"><i class="fa-solid fa-file-invoice"></i> รายงานสรุปรายวัน</button></li>
-                </ul>
-
-                <div class="tab-content">
-                    <!-- หน้ากราฟ -->
-                    <div class="tab-pane fade show active" id="tab-graph">
-                        <div class="row">
-                            <div class="col-md-6 mb-4"><h5 class="fw-bold text-danger text-center"><i class="fa-solid fa-temperature-high"></i> อุณหภูมิ (°C)</h5><canvas id="tempChart" style="max-height: 250px;"></canvas></div>
-                            <div class="col-md-6 mb-4"><h5 class="fw-bold text-success text-center"><i class="fa-solid fa-smog"></i> PM2.5 (ug/m3)</h5><canvas id="pmChart" style="max-height: 250px;"></canvas></div>
-                            <div class="col-md-6 mb-4"><h5 class="fw-bold text-primary text-center"><i class="fa-solid fa-cloud-rain"></i> ปริมาณน้ำฝน</h5><canvas id="rainChart" style="max-height: 250px;"></canvas></div>
-                            <div class="col-md-6 mb-4"><h5 class="fw-bold text-info text-center"><i class="fa-solid fa-wind"></i> ความเร็วลม (m/s)</h5><canvas id="windChart" style="max-height: 250px;"></canvas></div>
-                        </div>
-                    </div>
-                    <!-- หน้าตาราง -->
-                    <div class="tab-pane fade" id="tab-table">
-                        <div class="table-responsive">
-                            <table id="logTable" class="table table-hover w-100 align-middle"><thead class="table-dark"><tr><th>วัน-เวลา</th><th>รหัสสถานี</th><th>อุณหภูมิ (°C)</th><th>PM2.5</th><th>น้ำฝน</th><th>ลม (m/s)</th></tr></thead><tbody></tbody></table>
-                        </div>
-                    </div>
-                    <!-- หน้ารายงานสรุปรายวัน -->
-                    <div class="tab-pane fade" id="tab-summary">
-                        <h5 class="fw-bold text-primary mb-3"><i class="fa-solid fa-calendar-day"></i> สรุปข้อมูลประจำวัน (<span id="summary-date">วันนี้</span>)</h5>
-                        <div class="row g-3" id="summary-content">
-                            <div class="col-md-4"><div class="summary-card"><small class="text-muted">อุณหภูมิสูงสุด (Max Temp)</small><h3 id="sum-max-temp" class="text-danger fw-bold">--</h3></div></div>
-                            <div class="col-md-4"><div class="summary-card"><small class="text-muted">อุณหภูมิต่ำสุด (Min Temp)</small><h3 id="sum-min-temp" class="text-info fw-bold">--</h3></div></div>
-                            <div class="col-md-4"><div class="summary-card"><small class="text-muted">ฝุ่น PM2.5 สูงสุด (Max PM2.5)</small><h3 id="sum-max-pm" class="text-warning fw-bold">--</h3></div></div>
-                            <div class="col-md-4"><div class="summary-card"><small class="text-muted">ความเร็วลมสูงสุด (Max Wind)</small><h3 id="sum-max-wind" class="text-secondary fw-bold">--</h3></div></div>
-                            <div class="col-md-4"><div class="summary-card"><small class="text-muted">จำนวนบันทึกข้อมูลวันนี้</small><h3 id="sum-records" class="text-primary fw-bold">--</h3></div></div>
-                            <div class="col-md-4"><button onclick="window.print()" class="btn btn-outline-primary w-100 h-100 fw-bold"><i class="fa-solid fa-print"></i> พิมพ์รายงานนี้</button></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 
-    <!-- Modal เพิ่มสถานี -->
+    <!-- ================= MAIN APP ================= -->
+    <div class="app-container" id="main-dashboard" style="display: none;">
+        
+        <!-- SIDEBAR -->
+        <nav class="sidebar">
+            <i class="fa-solid fa-tree sidebar-logo"></i>
+            <div class="sidebar-logo-text">Dashboard</div>
+            
+            <a href="#" class="nav-item active"><i class="fa-solid fa-border-all nav-icon"></i> ภาพรวม</a>
+            <a href="#" class="nav-item" id="toggleHeatmapBtn"><i class="fa-solid fa-fire nav-icon"></i> Heatmap</a>
+            <a href="#" class="nav-item" onclick="exportStationsCSV()"><i class="fa-solid fa-file-csv nav-icon"></i> ส่งออกข้อมูล</a>
+            <a href="#" class="nav-item admin-only" id="addModeBtn" style="display:none;"><i class="fa-solid fa-location-dot nav-icon"></i> เพิ่มสถานี</a>
+        </nav>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+            
+            <!-- TOP HEADER -->
+            <header class="top-header">
+                <h1 class="header-title">SMART FOREST COMMAND CENTER</h1>
+                <div class="header-actions">
+                    <span id="last-update-time" class="badge bg-dark border border-secondary text-muted"><i class="fa-regular fa-clock"></i> รอรับข้อมูล...</span>
+                    <span id="adminBadge" class="badge bg-danger" style="display:none;"><i class="fa-solid fa-shield-halved"></i> Admin Mode</span>
+                    <span id="guestBadge" class="badge bg-secondary" style="display:none;"><i class="fa-solid fa-eye"></i> View Only</span>
+                    <button class="btn btn-sm btn-dark-custom rounded-circle" id="logoutBtn" style="display:none;" title="ออกจากระบบ"><i class="fa-solid fa-power-off text-danger"></i></button>
+                    <button class="btn btn-sm btn-dark-custom" id="backToLoginBtn" style="display:none;"><i class="fa-solid fa-arrow-left"></i> กลับ</button>
+                </div>
+            </header>
+
+            <!-- ROW 1: STAT CARDS -->
+            <div class="row g-3 mb-3">
+                <div class="col-md-5ths col-6" style="width: 20%;">
+                    <div class="panel stat-card">
+                        <div class="stat-label">สถานีออนไลน์</div>
+                        <div class="stat-value"><span id="stat-online" class="text-white">0</span> <span class="fs-5 text-muted">/ <span id="stat-total">0</span></span></div>
+                        <i class="fa-solid fa-satellite-dish stat-icon glow-green"></i>
+                        <div class="small text-success mt-1">Online Stations</div>
+                    </div>
+                </div>
+                <div class="col-md-5ths col-6" style="width: 20%;">
+                    <div class="panel stat-card">
+                        <div class="stat-label">อุณหภูมิเฉลี่ย</div>
+                        <div class="stat-value glow-orange"><span id="avg-temp">--</span><span class="fs-5"> °C</span></div>
+                        <i class="fa-solid fa-temperature-three-quarters stat-icon glow-orange"></i>
+                        <div class="small text-muted mt-1">Temperature</div>
+                    </div>
+                </div>
+                <div class="col-md-5ths col-6" style="width: 20%;">
+                    <div class="panel stat-card">
+                        <div class="stat-label">PM2.5 สูงสุด</div>
+                        <div class="stat-value glow-green" id="max-pm25-val"><span id="max-pm25">--</span></div>
+                        <i class="fa-solid fa-smog stat-icon glow-green"></i>
+                        <div class="small text-muted mt-1" id="pm25-status">ปกติ (Normal)</div>
+                    </div>
+                </div>
+                <div class="col-md-5ths col-6" style="width: 20%;">
+                    <div class="panel stat-card">
+                        <div class="stat-label">ความเร็วลมเฉลี่ย</div>
+                        <div class="stat-value glow-blue"><span id="avg-wind">--</span><span class="fs-5"> m/s</span></div>
+                        <i class="fa-solid fa-wind stat-icon glow-blue"></i>
+                        <div class="small text-muted mt-1">Wind Speed</div>
+                    </div>
+                </div>
+                <div class="col-md-5ths col-12" style="width: 20%;">
+                    <div class="panel stat-card">
+                        <div class="stat-label">แบตเตอรี่ล่าสุด</div>
+                        <div class="stat-value text-white"><span id="latest-batt">--</span><span class="fs-5"> %</span></div>
+                        <i class="fa-solid fa-battery-half stat-icon text-white"></i>
+                        <div class="small text-muted mt-1">Battery Level</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ROW 2: MAP, GAUGE, ALERTS -->
+            <div class="row g-3 mb-3">
+                <!-- LIVE MAP -->
+                <div class="col-lg-6">
+                    <div class="panel h-100 p-2 position-relative">
+                        <div class="d-flex justify-content-between align-items-center mb-2 px-2 pt-1">
+                            <h6 class="panel-title mb-0">LIVE MAP</h6>
+                            <input type="text" id="searchMapInput" class="form-control form-control-sm bg-dark border-secondary text-white w-50" placeholder="🔍 ค้นหาสถานี...">
+                        </div>
+                        <div id="instructionBox" class="alert alert-danger py-1 px-2 m-2 small text-center" style="display:none; position:absolute; z-index:999; top:40px; left:0; right:0;">โหมดปักหมุด: จิ้มจุดที่ต้องการเพิ่มสถานีบนแผนที่</div>
+                        <div id="map"></div>
+                    </div>
+                </div>
+                
+                <!-- RISK GAUGE -->
+                <div class="col-lg-3">
+                    <div class="panel h-100 d-flex flex-column align-items-center justify-content-center text-center">
+                        <h6 class="panel-title align-self-start w-100 text-start">RISK LEVEL</h6>
+                        <div style="position: relative; width: 100%; max-width: 200px; margin-top: 20px;">
+                            <canvas id="gaugeChart"></canvas>
+                            <div style="position: absolute; top: 60%; left: 50%; transform: translate(-50%, -50%);">
+                                <h3 class="fw-bold mb-0" id="risk-text-th" style="color: #10b981;">ปกติ</h3>
+                            </div>
+                        </div>
+                        <p class="text-muted small mt-2">ความเสี่ยงไฟป่าภาพรวม<br><span id="risk-text-en">Low Risk</span></p>
+                    </div>
+                </div>
+
+                <!-- ALERTS FEED -->
+                <div class="col-lg-3">
+                    <div class="panel h-100 d-flex flex-column">
+                        <h6 class="panel-title">ALERTS</h6>
+                        <div class="alerts-feed" id="alerts-container">
+                            <!-- JS จะเติมข้อมูลตรงนี้ -->
+                            <div class="text-center text-muted small mt-4">กำลังโหลดข้อมูล...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ROW 3: TREND CHARTS -->
+            <div class="row g-3">
+                <!-- Line Charts -->
+                <div class="col-lg-8">
+                    <div class="panel">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="panel-title mb-0">TREND (24 HOURS)</h6>
+                            <span class="small text-muted">แนวโน้มข้อมูล 20 รายการล่าสุด</span>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-md-4">
+                                <div class="chart-header"><i class="fa-solid fa-temperature-half text-danger"></i> อุณหภูมิ (°C)</div>
+                                <div class="mini-chart-container"><canvas id="tempChart"></canvas></div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="chart-header"><i class="fa-solid fa-smog text-success"></i> PM2.5 (µg/m³)</div>
+                                <div class="mini-chart-container"><canvas id="pmChart"></canvas></div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="chart-header"><i class="fa-solid fa-wind text-info"></i> ความเร็วลม (m/s)</div>
+                                <div class="mini-chart-container"><canvas id="windChart"></canvas></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Bar Chart -->
+                <div class="col-lg-4">
+                    <div class="panel h-100">
+                        <h6 class="panel-title mb-3">RAIN (0-1024)</h6>
+                        <div class="mini-chart-container" style="height: 130px;"><canvas id="rainChart"></canvas></div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Modal เพิ่มสถานี (เหมือนเดิม แต่ใช้โทนสีเข้ม) -->
     <div class="modal fade" id="stationModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg">
-                <div class="modal-header bg-primary text-white"><h5 class="modal-title"><i class="fa-solid fa-circle-plus"></i> ยืนยันพิกัดสถานีใหม่</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+            <div class="modal-content bg-dark text-white border-secondary">
+                <div class="modal-header border-secondary"><h5 class="modal-title"><i class="fa-solid fa-circle-plus"></i> เพิ่มพิกัดสถานีใหม่</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
                 <div class="modal-body">
                     <form id="stationForm">
-                        <div class="mb-3"><label class="form-label text-muted">รหัสเครื่อง (อ้างอิงเวลา)</label><input type="text" id="stId" class="form-control fw-bold" readonly></div>
-                        <div class="mb-3"><label class="form-label fw-bold">ชื่อจุดติดตั้ง</label><input type="text" id="stName" class="form-control border-primary" placeholder="เช่น ป่าโซนเหนือ" required></div>
+                        <div class="mb-3"><label class="form-label text-muted small">รหัสเครื่อง (อ้างอิงเวลา)</label><input type="text" id="stId" class="form-control bg-secondary text-white border-0" readonly></div>
+                        <div class="mb-3"><label class="form-label fw-bold">ชื่อจุดติดตั้ง</label><input type="text" id="stName" class="form-control bg-dark text-white border-secondary" placeholder="เช่น ป่าโซนเหนือ" required></div>
                         <input type="hidden" id="stLat"><input type="hidden" id="stLng">
-                        <button type="submit" class="btn btn-primary w-100 fw-bold py-2 rounded-pill">บันทึกข้อมูล</button>
+                        <button type="submit" class="btn btn-success w-100 fw-bold py-2">บันทึกข้อมูล</button>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Scripts ทั้งหมด -->
+    <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.3.6/js/dataTables.buttons.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.bootstrap5.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.html5.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.print.min.js"></script>
     
+    <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <script>
         // =========================================================
-        // ⚠️ สำคัญมาก: กรุณานำ apiKey ของคุณมาใส่ตรงนี้ ไม่งั้นหน้าเว็บจะค้าง
+        // ⚠️ สำคัญมาก: ใส่ apiKey จาก Firebase Console ตรงนี้
         // =========================================================
         const firebaseConfig = {
             apiKey: "AIzaSyBMW9SeWkYdrbU9byzphxpLd4JaAoIWKho",
               authDomain: "smart-forest-station.firebaseapp.com",
               databaseURL: "https://smart-forest-station-default-rtdb.asia-southeast1.firebasedatabase.app",
               projectId: "smart-forest-station",
+
         };
 
         let db, auth;
         try {
             firebase.initializeApp(firebaseConfig);
-            db = firebase.database();
-            auth = firebase.auth();
-        } catch(e) { console.warn("Firebase Init Error:", e); }
+            db = firebase.database(); auth = firebase.auth();
+        } catch(e) { console.error("Firebase Init Error:", e); }
 
-        let isAdmin = false;
-        let isGuest = false;
-
-        let currentFilter = 'ALL';
-        let latestStationData = {}; 
-        let stationMasterList = {}; 
-        let allLogsMemory = []; 
-        let isHeatmapMode = false;
-        let heatLayer = null;
-
+        let isAdmin = false, isGuest = false, isAddMode = false, isHeatmapMode = false;
+        let stationMasterList = {}, latestStationData = {}, allLogsMemory = []; 
+        let heatLayer = null, mapCircles = {}, mapMarkers = {};
         const alarmSound = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
 
-        // --- ระบบล็อกอิน ---
-        function showDashboardAsAdmin() {
-            isAdmin = true; isGuest = false; $('body').removeClass('guest-mode');
-            $('#login-screen').hide(); $('#main-dashboard').fadeIn(() => { if(map) map.invalidateSize(); });
-            $('#adminBadge').show(); $('#guestBadge').hide(); $('#logoutBtn').show(); $('#backToLoginBtn').hide(); $('.admin-only').show();
+        // --- Auth System ---
+        function initDashboard() {
+            $('#login-screen').fadeOut(300); 
+            $('#main-dashboard').fadeIn(500, () => { if(map) map.invalidateSize(); });
+            if(isAdmin) { $('#adminBadge, #logoutBtn, .admin-only').show(); $('#guestBadge, #backToLoginBtn').hide(); $('body').removeClass('guest-mode'); }
+            else { $('#guestBadge, #backToLoginBtn').show(); $('#adminBadge, #logoutBtn, .admin-only').hide(); $('body').addClass('guest-mode'); }
             redrawMarkers();
         }
+        function returnToLogin() { isAdmin = false; isGuest = false; $('#main-dashboard').hide(); $('#login-screen').fadeIn(); $('#loginForm')[0].reset(); }
+        
+        if(auth) auth.onAuthStateChanged(user => { if(user){ isAdmin=true; isGuest=false; initDashboard(); } else if(!isGuest) returnToLogin(); });
+        
+        $('#loginForm').submit(e => {
+            e.preventDefault(); if(!auth) return alert("Missing apiKey");
+            let btn = $(e.target).find('button[type="submit"]'); let txt = btn.html();
+            btn.html('<i class="fa-spin fa-solid fa-spinner"></i>'); btn.prop('disabled',true);
+            auth.signInWithEmailAndPassword($('#adminEmail').val(), $('#adminPwd').val()).catch(err => { btn.html(txt); btn.prop('disabled',false); alert('Error: '+err.message); });
+        });
+        $('#guestBtn').click(() => { isAdmin=false; isGuest=true; initDashboard(); });
+        $('#backToLoginBtn').click(returnToLogin);
+        $('#logoutBtn').click(() => { if(confirm("ออกจากระบบ?")) auth.signOut().then(returnToLogin); });
 
-        function showDashboardAsGuest() {
-            isAdmin = false; isGuest = true; $('body').addClass('guest-mode');
-            $('#login-screen').hide(); $('#main-dashboard').fadeIn(() => { if(map) map.invalidateSize(); });
-            $('#adminBadge').hide(); $('#guestBadge').show(); $('#logoutBtn').hide(); $('#backToLoginBtn').show(); $('.admin-only').hide();
-            if(isAddMode) $('#addModeBtn').click(); redrawMarkers();
-        }
+        // --- Chart.js Settings for Dark Theme ---
+        Chart.defaults.color = '#94a3b8';
+        Chart.defaults.font.family = 'Kanit';
+        const gridDark = { color: 'rgba(255,255,255,0.05)' };
+        const hideLegend = { plugins: { legend: { display: false } } };
 
-        function returnToLogin() {
-            isAdmin = false; isGuest = false; $('#main-dashboard').hide(); $('#login-screen').fadeIn(); $('#loginForm')[0].reset();
-        }
-
-        if(auth) {
-            auth.onAuthStateChanged((user) => { if(user) showDashboardAsAdmin(); else if(!isGuest) returnToLogin(); });
-        }
-
-        $('#loginForm').submit(function(e) {
-            e.preventDefault();
-            if(!auth) { alert("ไม่มีระบบล็อกอิน กรุณาเช็ค apiKey"); return; }
-            const btn = $(this).find('button[type="submit"]'); const txt = btn.html();
-            btn.html('<i class="fa-solid fa-spinner fa-spin"></i> กำลังตรวจสอบ...'); btn.prop('disabled', true);
-            auth.signInWithEmailAndPassword($('#adminEmail').val(), $('#adminPwd').val()).catch((error) => {
-                btn.html(txt); btn.prop('disabled', false); alert('เข้าสู่ระบบล้มเหลว: ' + error.message);
-            });
+        // Gauge Chart (Risk Level)
+        const ctxGauge = document.getElementById('gaugeChart').getContext('2d');
+        const gaugeChart = new Chart(ctxGauge, {
+            type: 'doughnut',
+            data: { labels: ['ต่ำ', 'ปานกลาง', 'สูง'], datasets: [{ data: [33.3, 33.3, 33.4], backgroundColor: ['#10b981', '#f59e0b', '#ef4444'], borderWidth: 0 }] },
+            options: { rotation: -90, circumference: 180, cutout: '75%', plugins: { legend: { display: false }, tooltip: { enabled: false } }, animation: { animateRotate: true } }
         });
 
-        $('#guestBtn').click(function() { showDashboardAsGuest(); });
-        $('#backToLoginBtn').click(function() { returnToLogin(); });
-        $('#logoutBtn').click(function() { if(confirm("ต้องการออกจากระบบใช่หรือไม่?")) { if(auth) auth.signOut().then(returnToLogin); else returnToLogin(); } });
-
-        // --- ตั้งค่า DataTables ---
-        const table = $('#logTable').DataTable({
-            dom: '<"row align-items-center mb-3"<"col-md-6"B><"col-md-6"f>>rt<"row"<"col-md-6"i><"col-md-6"p>>',
-            buttons: [ { extend: 'excelHtml5', text: '<i class="fa-solid fa-file-excel"></i> Excel (Logs)', className: 'btn btn-success btn-sm rounded-pill px-3 shadow-sm' }, { extend: 'pdfHtml5', text: '<i class="fa-solid fa-file-pdf"></i> PDF', className: 'btn btn-danger btn-sm rounded-pill px-3 shadow-sm mx-1' } ],
-            order: [[0, 'desc']], language: { url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/th.json' }
+        // Mini Charts
+        const createMiniChart = (id, type, color, fillBg) => new Chart(document.getElementById(id), {
+            type: type,
+            data: { labels: [], datasets: [{ data: [], borderColor: color, backgroundColor: fillBg, borderWidth: 2, fill: type === 'line', tension: 0.3, pointRadius: 0 }] },
+            options: { ...hideLegend, responsive: true, maintainAspectRatio: false, scales: { x: { display: false }, y: { grid: gridDark, border: {display: false} } } }
         });
+        const tempChart = createMiniChart('tempChart', 'line', '#ef4444', 'rgba(239, 68, 68, 0.1)');
+        const pmChart = createMiniChart('pmChart', 'line', '#10b981', 'rgba(16, 185, 129, 0.1)');
+        const windChart = createMiniChart('windChart', 'line', '#3b82f6', 'rgba(59, 130, 246, 0.1)');
+        const rainChart = createMiniChart('rainChart', 'bar', '#3b82f6', '#3b82f6');
 
-        // --- ตั้งค่า Chart.js ---
-        const chartOptions = { responsive: true, maintainAspectRatio: false, scales: { x: { ticks: { maxRotation: 45, minRotation: 45 } } } };
-        const tempChart = new Chart(document.getElementById('tempChart'), { type: 'line', data: { labels: [], datasets: [{ label: 'อุณหภูมิ (°C)', data: [], borderColor: '#ff4757', backgroundColor: 'rgba(255, 71, 87, 0.2)', borderWidth: 2, fill: true, tension: 0.3 }] }, options: chartOptions });
-        const pmChart = new Chart(document.getElementById('pmChart'), { type: 'line', data: { labels: [], datasets: [{ label: 'PM2.5 (ug/m3)', data: [], borderColor: '#2ed573', backgroundColor: 'rgba(46, 213, 115, 0.2)', borderWidth: 2, fill: true, tension: 0.3 }] }, options: chartOptions });
-        const rainChart = new Chart(document.getElementById('rainChart'), { type: 'bar', data: { labels: [], datasets: [{ label: 'น้ำฝน (Analog)', data: [], backgroundColor: '#70a1ff' }] }, options: chartOptions });
-        const windChart = new Chart(document.getElementById('windChart'), { type: 'line', data: { labels: [], datasets: [{ label: 'ลม (m/s)', data: [], borderColor: '#eccc68', backgroundColor: 'rgba(236, 204, 104, 0.2)', borderWidth: 2, fill: true, tension: 0.3 }] }, options: chartOptions });
+        function updateChartsAndSummary() {
+            let dataArr = allLogsMemory.slice(-20);
+            let labels = dataArr.map(d => new Date(d.timestamp).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}));
+            
+            // Update Charts
+            [tempChart, pmChart, windChart, rainChart].forEach(c => c.data.labels = labels);
+            tempChart.data.datasets[0].data = dataArr.map(d => d.temp); tempChart.update();
+            pmChart.data.datasets[0].data = dataArr.map(d => d.pm25); pmChart.update();
+            windChart.data.datasets[0].data = dataArr.map(d => d.wind); windChart.update();
+            rainChart.data.datasets[0].data = dataArr.map(d => d.rain); rainChart.update();
 
-        function updateCharts() {
-            let filterData = currentFilter === 'ALL' ? allLogsMemory : allLogsMemory.filter(d => (d.station_id || "ST-01") === currentFilter);
-            let recentData = filterData.slice(-20); 
-            let labels = recentData.map(d => new Date(d.timestamp).toLocaleTimeString('th-TH'));
-            tempChart.data.labels = labels; tempChart.data.datasets[0].data = recentData.map(d => d.temp); tempChart.update();
-            pmChart.data.labels = labels; pmChart.data.datasets[0].data = recentData.map(d => d.pm25); pmChart.update();
-            rainChart.data.labels = labels; rainChart.data.datasets[0].data = recentData.map(d => d.rain); rainChart.update();
-            windChart.data.labels = labels; windChart.data.datasets[0].data = recentData.map(d => d.wind); windChart.update();
-            updateDailySummary();
-        }
-
-        // --- ฟังก์ชันรายงานสรุปรายวัน ---
-        function updateDailySummary() {
-            const todayStr = new Date().toLocaleDateString('th-TH'); $('#summary-date').text(todayStr);
-            let todayLogs = allLogsMemory.filter(d => new Date(d.timestamp).toLocaleDateString('th-TH') === todayStr);
-            if (currentFilter !== 'ALL') todayLogs = todayLogs.filter(d => (d.station_id || "ST-01") === currentFilter);
-            if(todayLogs.length > 0) {
-                $('#sum-max-temp').text(Math.max(...todayLogs.map(d => d.temp)) + ' °C');
-                $('#sum-min-temp').text(Math.min(...todayLogs.map(d => d.temp)) + ' °C');
-                $('#sum-max-pm').text(Math.max(...todayLogs.map(d => d.pm25)) + ' ug/m3');
-                $('#sum-max-wind').text(Math.max(...todayLogs.map(d => d.wind)) + ' m/s');
-                $('#sum-records').text(todayLogs.length + ' ครั้ง');
-            } else {
-                $('#sum-max-temp').text('--'); $('#sum-min-temp').text('--'); $('#sum-max-pm').text('--'); $('#sum-max-wind').text('--'); $('#sum-records').text('0 ครั้ง');
+            // Update Top Stat Cards (Averages & Max)
+            if(dataArr.length > 0) {
+                let sumT=0, sumW=0, maxP=0;
+                dataArr.forEach(d => { sumT+=d.temp; sumW+=d.wind; if(d.pm25 > maxP) maxP = d.pm25; });
+                $('#avg-temp').text((sumT/dataArr.length).toFixed(1));
+                $('#avg-wind').text((sumW/dataArr.length).toFixed(1));
+                $('#max-pm25').text(maxP);
+                
+                // PM2.5 Status Color
+                let pStat = $('#pm25-status'), pVal = $('#max-pm25-val');
+                pStat.removeClass('text-success text-warning text-danger'); pVal.removeClass('glow-green glow-orange').css('color','');
+                if(maxP > 100) { pStat.text('วิกฤต (Hazardous)').addClass('text-danger'); pVal.css('color','#ef4444').css('text-shadow','0 0 15px rgba(239,68,68,0.5)'); }
+                else if(maxP > 50) { pStat.text('ปานกลาง (Moderate)').addClass('text-warning'); pVal.addClass('glow-orange'); }
+                else { pStat.text('ปกติ (Normal)').addClass('text-success'); pVal.addClass('glow-green'); }
             }
         }
 
-        // --- ตั้งค่าแผนที่ ---
-        const map = L.map('map').setView([13.95, 101.75], 11);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
-
-        let mapMarkers = {}; let mapCircles = {}; 
+        // --- MAP (Leaflet Dark Mode) ---
+        const map = L.map('map', {zoomControl: false}).setView([13.95, 101.75], 11);
+        // ใช้ Dark Tile Layer เพื่อความสวยงามแบบ Command Center
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; OpenStreetMap & CartoDB' }).addTo(map);
 
         $('#toggleHeatmapBtn').click(function() {
             isHeatmapMode = !isHeatmapMode;
-            if(isHeatmapMode) $(this).removeClass('btn-danger').addClass('btn-secondary').html('<i class="fa-solid fa-map"></i> ปิด Heatmap');
-            else $(this).removeClass('btn-secondary').addClass('btn-danger').html('<i class="fa-solid fa-fire"></i> Heatmap');
+            $(this).html(isHeatmapMode ? '<i class="fa-solid fa-map"></i> ซ่อน Heatmap' : '<i class="fa-solid fa-fire"></i> Heatmap');
+            $(this).toggleClass('text-warning');
             redrawMarkers();
         });
 
         $('#addModeBtn').click(function() {
             isAddMode = !isAddMode;
-            if (isAddMode) { $(this).removeClass('btn-warning').addClass('btn-danger btn-pulsing').html('<i class="fa-solid fa-xmark"></i> ยกเลิก'); $('#instructionBox').slideDown(); $('#map').addClass('map-active'); } 
-            else { $(this).removeClass('btn-danger btn-pulsing').addClass('btn-warning').html('<i class="fa-solid fa-thumbtack"></i> เพิ่มสถานี'); $('#instructionBox').slideUp(); $('#map').removeClass('map-active'); }
+            $(this).html(isAddMode ? '<i class="fa-solid fa-xmark"></i> ยกเลิก' : '<i class="fa-solid fa-location-dot"></i> เพิ่มสถานี').toggleClass('text-danger');
+            if(isAddMode) $('#instructionBox').slideDown(); else $('#instructionBox').slideUp();
         });
 
-        map.on('click', function(e) {
+        map.on('click', e => {
             if (!isAddMode || !isAdmin) return;
-            const autoId = 'ST-' + Date.now().toString().slice(-6);
-            $('#stId').val(autoId); $('#stName').val(''); $('#stLat').val(e.latlng.lat.toFixed(6)); $('#stLng').val(e.latlng.lng.toFixed(6));
+            $('#stId').val('ST-' + Date.now().toString().slice(-6)); $('#stName').val(''); $('#stLat').val(e.latlng.lat.toFixed(6)); $('#stLng').val(e.latlng.lng.toFixed(6));
             $('#stationModal').modal('show'); $('#addModeBtn').click(); 
         });
 
-        $('#stationForm').submit(function(e) {
-            e.preventDefault(); if(!isAdmin || !db) return;
-            db.ref('stations/' + $('#stId').val()).set({ name: $('#stName').val(), lat: parseFloat($('#stLat').val()), lng: parseFloat($('#stLng').val()) }).then(() => $('#stationModal').modal('hide'));
+        $('#stationForm').submit(e => { e.preventDefault(); if(isAdmin && db) db.ref('stations/' + $('#stId').val()).set({ name: $('#stName').val(), lat: parseFloat($('#stLat').val()), lng: parseFloat($('#stLng').val()) }).then(() => $('#stationModal').modal('hide')); });
+        window.deleteStation = id => { if(isAdmin && db && confirm(`ลบสถานี ${id}?`)) db.ref('stations/' + id).remove(); };
+        $('#searchMapInput').on('input', function() {
+            let q = $(this).val().toLowerCase(); if(!q) return;
+            for (const [id, st] of Object.entries(stationMasterList)) { if (id.toLowerCase().includes(q) || st.name.toLowerCase().includes(q)) { map.setView([st.lat, st.lng], 16); if(mapMarkers[id]) mapMarkers[id].openPopup(); break; } }
         });
 
-        window.deleteStation = function(id) {
-            if(!isAdmin || !db) return; if(confirm(`ลบสถานี ${id} ใช่หรือไม่?`)) db.ref('stations/' + id).remove();
+        window.exportStationsCSV = () => {
+            let csv = "data:text/csv;charset=utf-8,\uFEFFรหัสสถานี,ชื่อ,Lat,Lng,สถานะ,อัปเดต\n"; const n = Date.now();
+            for (const [id, d] of Object.entries(stationMasterList)) {
+                let st = "Offline", t = "-"; const sd = latestStationData[id];
+                if(sd) { if((n - sd.timestamp) <= 600000) st="Online"; t = new Date(sd.timestamp).toLocaleString('th-TH'); }
+                csv += `${id},"${d.name}",${d.lat},${d.lng},${st},"${t}"\n`;
+            }
+            const link = document.createElement("a"); link.href = encodeURI(csv); link.download = "Stations.csv"; document.body.appendChild(link); link.click(); link.remove();
         };
 
-        window.searchStation = function() {
-            const query = $('#searchMapInput').val().toLowerCase(); if(!query) return; let found = false;
-            for (const [id, st] of Object.entries(stationMasterList)) {
-                if (id.toLowerCase().includes(query) || st.name.toLowerCase().includes(query)) {
-                    map.setView([st.lat, st.lng], 16); if(mapMarkers[id]) mapMarkers[id].openPopup(); found = true; break;
+        function updateGaugeAndFeed() {
+            let high=0, med=0, total=0, feedHTML=''; const now = Date.now();
+            
+            // วนลูปสร้าง Alert Feed ล่าสุด 5 รายการ
+            let recentLogs = [...allLogsMemory].reverse().slice(0, 10);
+            let addedIds = new Set();
+            
+            for(let log of recentLogs) {
+                if(addedIds.has(log.station_id)) continue;
+                addedIds.add(log.station_id);
+                
+                let t = log.temp, p = log.pm25, time = new Date(log.timestamp).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+                let stId = log.station_id || 'ST-00';
+                
+                if(t > 38 && p > 100) {
+                    feedHTML += `<div class="alert-item"><div class="alert-icon alert-bg-red"><i class="fa-solid fa-fire"></i></div><div class="alert-content flex-grow-1"><h6>${stId} (วิกฤต)</h6><p>อุณหภูมิและฝุ่นเกินเกณฑ์</p></div><div class="alert-time">${time}</div></div>`;
+                } else if(t > 35 || p > 50) {
+                    feedHTML += `<div class="alert-item"><div class="alert-icon alert-bg-orange"><i class="fa-solid fa-triangle-exclamation"></i></div><div class="alert-content flex-grow-1"><h6>${stId} (เฝ้าระวัง)</h6><p>ตรวจพบค่าผิดปกติ</p></div><div class="alert-time">${time}</div></div>`;
+                } else {
+                    feedHTML += `<div class="alert-item"><div class="alert-icon alert-bg-green"><i class="fa-solid fa-check"></i></div><div class="alert-content flex-grow-1"><h6>${stId} (ปกติ)</h6><p>สภาพอากาศปกติ</p></div><div class="alert-time">${time}</div></div>`;
                 }
             }
-            if(!found) alert('ไม่พบสถานีที่คุณค้นหาครับ');
-        };
-        $('#searchMapInput').keypress(function(e){ if(e.which == 13) searchStation(); });
+            $('#alerts-container').html(feedHTML || '<div class="text-center text-muted small mt-4">ไม่มีแจ้งเตือน</div>');
 
-        window.exportStationsCSV = function() {
-            let csvContent = "data:text/csv;charset=utf-8,\uFEFFรหัสสถานี,ชื่อจุดติดตั้ง,ละติจูด (Lat),ลองจิจูด (Lng),สถานะปัจจุบัน,เวลาอัปเดตล่าสุด\n";
-            const now = Date.now();
-            for (const [id, data] of Object.entries(stationMasterList)) {
-                let status = "Offline"; let lastUpdate = "-"; const sensorData = latestStationData[id];
-                if (sensorData) { if ((now - sensorData.timestamp) <= 600000) status = "Online"; lastUpdate = new Date(sensorData.timestamp).toLocaleString('th-TH'); }
-                csvContent += `${id},"${data.name}",${data.lat},${data.lng},${status},"${lastUpdate}"\n`;
+            // คำนวณความเสี่ยงรวมของป่า
+            for(let id in stationMasterList) {
+                let d = latestStationData[id]; if(!d) continue;
+                if((now - d.timestamp) > 600000) continue; // ข้ามตัวที่ออฟไลน์
+                total++;
+                if(d.temp > 38 && d.pm25 > 100) high++;
+                else if(d.temp > 35 || d.pm25 > 50) med++;
             }
-            const encodedUri = encodeURI(csvContent); const link = document.createElement("a"); link.setAttribute("href", encodedUri); link.setAttribute("download", "Station_List_" + new Date().toISOString().split('T')[0] + ".csv"); document.body.appendChild(link); link.click(); document.body.removeChild(link);
-        };
 
-        function updateOverview() {
-            let total = 0, online = 0, offline = 0, risk = 0; const now = Date.now();
-            for (const stId in stationMasterList) {
-                total++; const stData = latestStationData[stId];
-                if(stData) { if((now - stData.timestamp) > 600000) offline++; else online++; if(stData.temp > 38 || stData.pm25 > 100) risk++; } else { offline++; }
-            }
-            $('#stat-total').text(total); $('#stat-online').text(online); $('#stat-offline').text(offline); $('#stat-risk').text(risk);
+            // อัปเดตเข็มไมล์ Gauge (สีเขียว, เหลือง, แดง)
+            let riskT_th = "ปกติ", riskT_en = "Low Risk", color = "#10b981";
+            if(high > 0) { riskT_th = "สูง (วิกฤต)"; riskT_en = "High Risk"; color = "#ef4444"; gaugeChart.data.datasets[0].backgroundColor = ['#334155','#334155', color]; }
+            else if(med > 0) { riskT_th = "ปานกลาง"; riskT_en = "Medium Risk"; color = "#f59e0b"; gaugeChart.data.datasets[0].backgroundColor = ['#334155', color, '#334155']; }
+            else { gaugeChart.data.datasets[0].backgroundColor = [color, '#334155', '#334155']; }
+            
+            gaugeChart.update();
+            $('#risk-text-th').text(riskT_th).css('color', color);
+            $('#risk-text-en').text(riskT_en);
         }
 
         function redrawMarkers() {
@@ -411,100 +486,63 @@
             for (let id in mapCircles) map.removeLayer(mapCircles[id]);
             for (let id in mapMarkers) map.removeLayer(mapMarkers[id]);
             if (heatLayer) map.removeLayer(heatLayer);
-            mapCircles = {}; mapMarkers = {}; let heatDataArray = [];
+            mapCircles = {}; mapMarkers = {}; let heatData = [];
+            let on=0, off=0, tot=0;
 
             for (const [id, data] of Object.entries(stationMasterList)) {
-                const sensorData = latestStationData[id];
-                let riskLevel = "🟢 ปกติ"; let riskColor = "#2ed573"; let statusText = "⚪ รอข้อมูล"; let timeStr = "-";
-                let t = "--", p = "--", r = "--", w = "--", b = "--"; let intensity = 0.1; 
+                tot++; const d = latestStationData[id];
+                let risk = "ปกติ", color = "#10b981", st = "Offline", tStr = "-", t="--", p="--", r="--", w="--", b="--", i=0.1; 
 
-                if (sensorData) {
-                    t = sensorData.temp; p = sensorData.pm25; r = sensorData.rain; w = sensorData.wind; b = sensorData.battery !== undefined ? sensorData.battery : "--";
-                    timeStr = new Date(sensorData.timestamp).toLocaleString('th-TH');
-                    
-                    if (t > 40 && p > 150) { riskLevel = "🔴 วิกฤต"; riskColor = "#ff4757"; intensity = 1.0; }
-                    else if (t > 38 || p > 100) { riskLevel = "🟠 เสี่ยงสูง"; riskColor = "#ffa502"; intensity = 0.7; }
-                    else if (t >= 35) { riskLevel = "🟡 เฝ้าระวัง"; riskColor = "#eccc68"; intensity = 0.4; }
-                    if ((now - sensorData.timestamp) > 600000) statusText = "🔴 Offline"; else statusText = "🟢 Online";
-                }
+                if (d) {
+                    t=d.temp; p=d.pm25; r=d.rain; w=d.wind; b=d.battery!==undefined?d.battery:"--"; tStr = new Date(d.timestamp).toLocaleTimeString('th-TH');
+                    if (t > 40 && p > 150) { risk="วิกฤต"; color="#ef4444"; i=1.0; } else if (t > 38 || p > 100) { risk="เสี่ยงสูง"; color="#f59e0b"; i=0.7; } else if (t >= 35) { risk="เฝ้าระวัง"; color="#f59e0b"; i=0.4; }
+                    if ((now - d.timestamp) > 600000) { off++; st="Offline"; color="#64748b"; } else { on++; st="Online"; }
+                } else off++;
 
-                if (isHeatmapMode) { heatDataArray.push([data.lat, data.lng, intensity]); } 
-                else { mapCircles[id] = L.circle([data.lat, data.lng], { color: riskColor, fillColor: riskColor, fillOpacity: 0.3, radius: 500 }).addTo(map); }
-                
-                let deleteBtnHtml = isAdmin ? `<button class="btn btn-sm btn-outline-danger w-100 rounded-pill mt-2" onclick="deleteStation('${id}')"><i class="fa-solid fa-trash"></i> ลบสถานี</button>` : '';
-
-                const popupContent = `
-                    <div class="text-center" style="min-width: 200px;">
-                        <h5 class="fw-bold mb-1 text-primary">${data.name}</h5>
-                        <span class="badge bg-secondary mb-2">รหัส: ${id} | ${statusText}</span><hr class="my-1">
-                        <div class="text-start small mb-3 lh-lg mt-2">
-                            📍 <b>พิกัด:</b> <span class="text-muted">${data.lat.toFixed(5)}, ${data.lng.toFixed(5)}</span><br>
-                            🌡️ อุณหภูมิ: <b>${t}°C</b><br>
-                            💨 PM2.5: <b>${p}</b><br>
-                            🌧️ ฝน: <b>${r}</b> &nbsp;&nbsp; 🌬️ ลม: <b>${w} m/s</b><br>
-                            🔋 แบตเตอรี่: <b>${b}%</b><br>
-                            🔥 สถานะ: <b>${riskLevel}</b><br>
-                            🕒 ล่าสุด: <b>${timeStr}</b>
+                if (isHeatmapMode) { heatData.push([data.lat, data.lng, i]); } 
+                else {
+                    // Custom Marker Icon
+                    let mIcon = L.divIcon({ className: 'custom-marker', html: `<i class="fa-solid fa-location-dot fa-2x" style="color:${color}; text-shadow:0 0 10px ${color};"></i>`, iconSize: [30, 30], iconAnchor: [15, 30] });
+                    let delBtn = isAdmin ? `<button class="btn btn-sm btn-outline-danger w-100 mt-2" onclick="deleteStation('${id}')"><i class="fa-solid fa-trash"></i> ลบ</button>` : '';
+                    let pop = `<div style="min-width:180px; text-align:left;">
+                        <h6 class="fw-bold mb-1" style="color:${color};">${data.name}</h6>
+                        <small class="text-muted">${id} | ${st}</small><hr class="my-2 border-secondary">
+                        <div class="small mb-2 lh-lg">
+                            🌡️ Temp: <b>${t}°C</b><br>💨 PM2.5: <b>${p}</b><br>🌧️ Rain: <b>${r}</b><br>🌬️ Wind: <b>${w} m/s</b><br>🔋 Batt: <b>${b}%</b><br>🔥 Status: <b>${risk}</b>
                         </div>
-                        <a href="https://maps.google.com/?q=${data.lat},${data.lng}" target="_blank" class="btn btn-primary w-100 rounded-pill text-white fw-bold mb-2 shadow-sm fs-6 py-2"><i class="fa-solid fa-location-dot fa-bounce"></i> เปิดนำทาง</a>
-                        ${deleteBtnHtml}
-                    </div>`;
-                mapMarkers[id] = L.marker([data.lat, data.lng]).addTo(map).bindPopup(popupContent);
+                        <a href="https://maps.google.com/?q=${data.lat},${data.lng}" target="_blank" class="btn btn-sm btn-primary w-100 mb-1"><i class="fa-solid fa-location-arrow"></i> นำทาง</a>
+                        ${delBtn}</div>`;
+                    mapMarkers[id] = L.marker([data.lat, data.lng], {icon: mIcon}).addTo(map).bindPopup(pop);
+                }
             }
 
-            if (isHeatmapMode && heatDataArray.length > 0) {
-                heatLayer = L.heatLayer(heatDataArray, { radius: 50, blur: 25, maxZoom: 15, gradient: {0.4: 'lime', 0.6: 'yellow', 0.8: 'orange', 1.0: 'red'} }).addTo(map);
-            }
+            if (isHeatmapMode && heatData.length > 0) heatLayer = L.heatLayer(heatData, {radius: 40, blur: 20, maxZoom: 15, gradient: {0.4: '#10b981', 0.6: '#f59e0b', 1.0: '#ef4444'}}).addTo(map);
+            $('#stat-total').text(tot); $('#stat-online').text(on);
         }
 
         if (db) {
-            db.ref('stations').on('value', (snapshot) => {
-                stationMasterList = snapshot.val() || {};
-                $('#stationFilter').find('option:not(:first)').remove();
-                for (const [id, data] of Object.entries(stationMasterList)) { $('#stationFilter').append(`<option value="${id}">📍 ${data.name} (${id})</option>`); }
-                $('#stationFilter').val(currentFilter);
-                redrawMarkers(); updateOverview();
+            db.ref('stations').on('value', snap => {
+                stationMasterList = snap.val() || {};
+                redrawMarkers(); updateGaugeAndFeed();
             });
 
-            db.ref('logs').orderByChild('timestamp').limitToLast(150).on('child_added', (snapshot) => {
-                const data = snapshot.val(); if (!data) return;
-                const stId = data.station_id || "ST-01"; const timeString = new Date(data.timestamp).toLocaleString('th-TH');
+            db.ref('logs').orderByChild('timestamp').limitToLast(100).on('child_added', snap => {
+                const data = snap.val(); if (!data) return;
+                const id = data.station_id || "ST-00"; 
+                latestStationData[id] = data; allLogsMemory.push(data); if(allLogsMemory.length > 200) allLogsMemory.shift(); 
+                
+                $('#last-update-time').html(`<i class="fa-regular fa-clock"></i> ล่าสุด: ${new Date(data.timestamp).toLocaleTimeString('th-TH')}`);
+                if(data.battery !== undefined) $('#latest-batt').text(data.battery);
 
-                latestStationData[stId] = data; latestStationData['ALL_LATEST'] = data;
-                allLogsMemory.push(data); if(allLogsMemory.length > 300) allLogsMemory.shift(); 
-
-                if (currentFilter === 'ALL' || currentFilter === stId) {
-                    $('#val-temp').text(data.temp); $('#val-pm25').text(data.pm25); $('#val-rain').text(data.rain); $('#val-wind').text(data.wind);
-                    $('#last-update-time').html(`<i class="fa-regular fa-clock"></i> ล่าสุด: ${timeString} (${stId})`);
-                    
-                    let batt = data.battery !== undefined ? data.battery : "--";
-                    $('#val-batt').html(`<i class="fa-solid fa-battery-three-quarters"></i> ${batt}%`);
-                    if(batt !== "--") {
-                        if (batt <= 20) $('#val-batt').removeClass('bg-success bg-warning').addClass('bg-danger');
-                        else if (batt <= 50) $('#val-batt').removeClass('bg-success bg-danger').addClass('bg-warning');
-                        else $('#val-batt').removeClass('bg-warning bg-danger').addClass('bg-success');
-                    }
-                }
-
-                table.row.add([ timeString, `<span class="badge bg-secondary">${stId}</span>`, data.temp, data.pm25, data.rain, data.wind ]).draw(false);
-                updateCharts(); 
+                updateChartsAndSummary(); redrawMarkers(); updateGaugeAndFeed();
 
                 if (data.temp > 38 && data.pm25 > 100) {
-                    $('#toastMessage').html(`🚨 พบความเสี่ยงไฟป่า!<br>สถานี: <b>${stId}</b><br>อุณหภูมิ: ${data.temp}°C, PM2.5: ${data.pm25}`);
-                    const toast = new bootstrap.Toast(document.getElementById('alarmToast')); toast.show();
-                    alarmSound.play().catch(e => {}); 
+                    $('#toastMessage').html(`🚨 วิกฤต!<br>${id}<br>อุณหภูมิ: ${data.temp}°C, PM2.5: ${data.pm25}`);
+                    new bootstrap.Toast(document.getElementById('alarmToast')).show(); alarmSound.play().catch(e=>{}); 
                 }
-                redrawMarkers(); updateOverview();
             });
         }
-
-        $('#stationFilter').change(function() {
-            currentFilter = $(this).val();
-            if (currentFilter === 'ALL') table.column(1).search('').draw(); else table.column(1).search(currentFilter).draw();
-            updateCharts();
-        });
-        
-        setInterval(() => { redrawMarkers(); updateOverview(); }, 60000);
+        setInterval(() => { redrawMarkers(); updateGaugeAndFeed(); }, 60000);
     </script>
 </body>
 </html>
