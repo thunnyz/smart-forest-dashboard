@@ -22,7 +22,7 @@
             --panel-bg: #101623;
             --sidebar-bg: #0a0f1a;
             --text-main: #f8fafc;
-            --text-muted: #94a3b8; /* ปรับให้สว่างขึ้นจากเดิม */
+            --text-muted: #94a3b8;
             --accent-green: #10b981;
             --accent-red: #ef4444;
             --accent-orange: #f59e0b;
@@ -32,28 +32,47 @@
         }
 
         body { background-color: var(--bg-dark); color: var(--text-main); font-family: 'Kanit', sans-serif; overflow: hidden; margin: 0; }
-        
-        /* =========================================
-           แก้ปัญหาสีฟอนต์กลืนไปกับพื้นหลัง (Dark Mode Fixes)
-           ========================================= */
         .text-muted { color: var(--text-muted) !important; }
         
-        /* ฟิกซ์ Input / Select / Date Picker ให้เป็นหน้าต่างมืดตัวหนังสือขาว */
+        /* Forms & Tables */
         .form-control, .form-select { background-color: #1e293b !important; color: #f8fafc !important; border-color: #334155 !important; }
         .form-control:focus, .form-select:focus { background-color: #0f172a !important; color: #f8fafc !important; border-color: var(--accent-green) !important; box-shadow: 0 0 0 0.2rem rgba(16,185,129,0.25) !important; }
         .form-control::placeholder { color: #64748b !important; }
-        ::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; } /* ทำให้ไอคอนปฏิทินเป็นสีขาว */
-
-        /* ฟิกซ์ข้อความในตาราง DataTables ให้เป็นสีขาว */
+        ::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
         .dataTables_info, .dataTables_length label, .dataTables_filter label { color: var(--text-main) !important; }
         .page-link { background-color: #1e293b !important; border-color: #334155 !important; color: var(--text-main) !important; }
         .page-link:hover { background-color: #334155 !important; color: white !important; }
         .page-item.active .page-link { background-color: var(--accent-green) !important; border-color: var(--accent-green) !important; color: white !important; }
 
-        /* ฟิกซ์ข้อความในหมุดแผนที่ (Leaflet Popup) ให้เป็นสีขาว */
+        /* Leaflet Popups */
         .leaflet-container { font-family: 'Kanit', sans-serif; }
         .leaflet-popup-content, .leaflet-popup-content * { color: var(--text-main) !important; }
         .leaflet-popup-content b { color: white !important; }
+
+        /* =========================================
+           ✨ DYNAMIC & REAL-TIME ANIMATIONS ✨
+           ========================================= */
+
+        /* 1. จุดแดงกะพริบ LIVE */
+        .live-dot { display: inline-block; width: 10px; height: 10px; background-color: var(--accent-red); border-radius: 50%; margin-right: 8px; box-shadow: 0 0 10px var(--accent-red); animation: blink-live 1.5s infinite ease-in-out; }
+        @keyframes blink-live { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1); } }
+
+        /* 2. สว่างวาบเมื่อข้อมูลเปลี่ยน (Data Update Flash) */
+        .flash-update { animation: data-flash 1s ease-out; }
+        @keyframes data-flash {
+            0% { color: #ffffff !important; text-shadow: 0 0 20px #ffffff, 0 0 30px #ffffff; transform: scale(1.05); }
+            100% { transform: scale(1); } /* กลับไปสีเดิมที่เซ็ตไว้ผ่าน inline style / class */
+        }
+
+        /* 3. คลื่นเรดาร์บนหมุดแผนที่ (Radar Pulse) */
+        .marker-wrapper { position: relative; display: flex; justify-content: center; align-items: center; }
+        .radar-pulse-danger::before, .radar-pulse-warning::before { content: ''; position: absolute; width: 30px; height: 30px; border-radius: 50%; z-index: -1; animation: radar-wave 2s infinite ease-out; }
+        .radar-pulse-danger::before { background-color: rgba(239, 68, 68, 0.6); }
+        .radar-pulse-warning::before { background-color: rgba(245, 158, 11, 0.6); animation-duration: 2.5s; }
+        @keyframes radar-wave {
+            0% { transform: scale(0.5); opacity: 1; }
+            100% { transform: scale(2.5); opacity: 0; }
+        }
 
         /* === Layout === */
         .app-container { display: flex; height: 100vh; overflow: hidden; }
@@ -69,8 +88,6 @@
 
         /* Main Content */
         .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; padding: 15px 25px; scroll-behavior: smooth; }
-        
-        /* Sections (SPA Logic) */
         .view-section { display: none; animation: fadeIn 0.4s; }
         .view-section.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -86,7 +103,7 @@
         
         /* Dashboard Stat Cards */
         .stat-card { position: relative; overflow: hidden; padding: 15px; height: 90px; display: flex; flex-direction: column; justify-content: center; }
-        .stat-value { font-size: 1.8rem; font-weight: 800; line-height: 1.1; margin-top: 5px;}
+        .stat-value { font-size: 1.8rem; font-weight: 800; line-height: 1.1; margin-top: 5px; display: inline-block;}
         .stat-label { font-size: 0.75rem; color: var(--text-muted); }
         .stat-icon { position: absolute; right: 15px; top: 15px; font-size: 1.5rem; opacity: 0.15; }
         
@@ -99,7 +116,9 @@
         .alerts-feed { overflow-y: auto; padding-right: 5px; }
         .alerts-feed::-webkit-scrollbar { width: 4px; }
         .alerts-feed::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
-        .alert-item { display: flex; gap: 10px; align-items: center; padding: 8px 10px; border-radius: 6px; background: rgba(255,255,255,0.02); margin-bottom: 8px; border-left: 3px solid var(--text-muted); }
+        .alert-item { display: flex; gap: 10px; align-items: center; padding: 8px 10px; border-radius: 6px; background: rgba(255,255,255,0.02); margin-bottom: 8px; border-left: 3px solid var(--text-muted); transition: all 0.3s; }
+        .alert-item.new-alert { animation: slideIn 0.5s ease-out forwards; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
         .alert-item.danger { border-left-color: var(--accent-red); background: rgba(239, 68, 68, 0.05); }
         .alert-item.warning { border-left-color: var(--accent-orange); background: rgba(245, 158, 11, 0.05); }
         .alert-content h6 { margin: 0; font-size: 0.75rem; font-weight: 600; color: var(--text-main); }
@@ -114,7 +133,6 @@
         #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-dark); z-index: 9999; display: flex; align-items: center; justify-content: center; }
         .login-card { background: var(--panel-bg); padding: 40px; border-radius: 15px; border: 1px solid var(--border-color); box-shadow: 0 20px 40px rgba(0,0,0,0.5); width: 100%; max-width: 400px; }
 
-        /* Print Mode for PDF Report */
         @media print {
             body * { visibility: hidden; }
             #view-reports, #view-reports * { visibility: visible; }
@@ -165,14 +183,15 @@
         <!-- MAIN CONTENT -->
         <main class="main-content" id="scroll-area">
             
-            <!-- TOP HEADER -->
+            <!-- TOP HEADER (LIVE INDICATOR ADDED HERE) -->
             <header class="top-header">
                 <h1 class="header-title" id="pageTitle"><i class="fa-solid fa-border-all" style="color:var(--accent-green);"></i> DASHBOARD</h1>
                 <div class="header-actions">
                     <select id="stationFilter" class="form-select form-select-sm" style="width: auto;">
                         <option value="ALL">🌐 ทุกสถานี (All Stations)</option>
                     </select>
-                    <span id="last-update-time" class="badge bg-dark border border-secondary text-muted"><i class="fa-regular fa-clock"></i> รอข้อมูล...</span>
+                    <!-- ✨ เปลี่ยนคำว่ารอข้อมูล เป็น LIVE ตรงนี้ ✨ -->
+                    <span id="last-update-time" class="badge bg-dark border border-secondary text-muted d-flex align-items-center"><span class="live-dot"></span> LIVE </span>
                     <span id="adminBadge" class="badge bg-danger" style="display:none;"><i class="fa-solid fa-user-shield"></i> Admin</span>
                     <button class="btn btn-sm btn-outline-danger" id="logoutBtn" style="display:none;" title="ออกจากระบบ"><i class="fa-solid fa-power-off"></i></button>
                     <button class="btn btn-sm btn-outline-secondary" id="backToLoginBtn" style="display:none;"><i class="fa-solid fa-arrow-left"></i> ออก</button>
@@ -226,7 +245,7 @@
                             </div>
                         </div>
                         <div class="panel flex-grow-1 d-flex flex-column" style="padding: 15px;">
-                            <h6 class="panel-title mb-2">ALERTS</h6>
+                            <h6 class="panel-title mb-2">LIVE ALERTS</h6>
                             <div id="alerts-container-dash" class="alerts-feed flex-grow-1" style="height: 180px;">
                                 <div class="text-center text-muted small mt-4">กำลังโหลดข้อมูล...</div>
                             </div>
@@ -367,13 +386,6 @@
         </div>
     </div>
 
-    <!-- Toast -->
-    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
-        <div id="alarmToast" class="toast align-items-center text-white bg-danger border-0 shadow-lg" role="alert">
-            <div class="d-flex"><div class="toast-body fw-bold fs-6" id="toastMessage">🚨 พบความเสี่ยงไฟป่า!</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>
-        </div>
-    </div>
-
     <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -408,12 +420,22 @@ apiKey: "AIzaSyBMW9SeWkYdrbU9byzphxpLd4JaAoIWKho",
         let stationMasterList = {}, latestStationData = {}, allLogsMemory = []; 
         let map, heatLayer = null, mapCircles = {}, mapMarkers = {};
         let isHeatmapMode = false, isAddMode = false;
-        const alarmSound = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
+        let isFirstLoad = true;
 
         // --- Defaults for Reports ---
         const todayStr = new Date().toISOString().split('T')[0];
         $('#reportStartDate').val(todayStr);
         $('#reportEndDate').val(todayStr);
+
+        // --- Flash Animation Helper ---
+        function flashElement(id) {
+            let el = document.getElementById(id);
+            if(el) {
+                el.classList.remove('flash-update');
+                void el.offsetWidth; // trigger reflow
+                el.classList.add('flash-update');
+            }
+        }
 
         // --- SPA Navigation ---
         $('.nav-item').click(function(e) {
@@ -522,24 +544,36 @@ apiKey: "AIzaSyBMW9SeWkYdrbU9byzphxpLd4JaAoIWKho",
             
             $('#stat-total').text(tot); $('#stat-online').text(on);
             if(validSt > 0) {
-                $('#avg-temp').text((sumT/validSt).toFixed(1));
-                $('#avg-wind').text((sumW/validSt).toFixed(1));
-                $('#avg-hum').text((sumH/validSt).toFixed(0));
+                let newAvgTemp = (sumT/validSt).toFixed(1);
+                let newAvgWind = (sumW/validSt).toFixed(1);
+                let newAvgHum = (sumH/validSt).toFixed(0);
+                let newAvgRisk = Math.round(sumScore/validSt);
+
+                // Update text and trigger flash animation if it's not the first load
+                if(!isFirstLoad) {
+                    if($('#avg-temp').text() !== newAvgTemp) flashElement('avg-temp');
+                    if($('#max-pm25').text() != maxP) flashElement('max-pm25');
+                    if($('#avg-hum').text() !== newAvgHum) flashElement('avg-hum');
+                    if($('#avg-wind').text() !== newAvgWind) flashElement('avg-wind');
+                    if($('#fire-risk-score').text() != newAvgRisk) flashElement('fire-risk-score');
+                }
+
+                $('#avg-temp').text(newAvgTemp);
+                $('#avg-wind').text(newAvgWind);
+                $('#avg-hum').text(newAvgHum);
                 $('#max-pm25').text(maxP);
-                
-                let avgRisk = Math.round(sumScore/validSt);
-                $('#fire-risk-score').text(avgRisk);
-                $('#algo-score-display').text(avgRisk);
+                $('#fire-risk-score').text(newAvgRisk);
+                $('#algo-score-display').text(newAvgRisk);
                 
                 let rText = "LOW 🟢", rColor = "var(--accent-green)", gText = "ปกติ";
-                if(avgRisk > 75) { rText = "CRITICAL 🔥"; rColor = "var(--accent-red)"; gText = "วิกฤต"; }
-                else if(avgRisk > 50) { rText = "HIGH 🟠"; rColor = "var(--accent-orange)"; gText = "เสี่ยง"; }
-                else if(avgRisk > 30) { rText = "WATCH 🟡"; rColor = "#facc15"; gText = "เฝ้าระวัง"; }
+                if(newAvgRisk > 75) { rText = "CRITICAL 🔥"; rColor = "var(--accent-red)"; gText = "วิกฤต"; }
+                else if(newAvgRisk > 50) { rText = "HIGH 🟠"; rColor = "var(--accent-orange)"; gText = "เสี่ยง"; }
+                else if(newAvgRisk > 30) { rText = "WATCH 🟡"; rColor = "#facc15"; gText = "เฝ้าระวัง"; }
                 
                 $('#fire-risk-text').text(rText).css('color', rColor); $('#fire-risk-score').css('color', rColor);
                 $('#fire-risk-panel').css({'background': `rgba(${rColor==='var(--accent-red)'?'239,68,68':(rColor==='var(--accent-orange)'?'245,158,11':'16,185,129')}, 0.05)`, 'border-color': rColor});
                 $('#algo-score-display').css('color', rColor);
-                gaugeChart.data.datasets[0].backgroundColor = (avgRisk > 75) ? ['#1e293b','#1e293b', '#ef4444'] : (avgRisk > 50) ? ['#1e293b', '#f59e0b', '#1e293b'] : ['#10b981', '#1e293b', '#1e293b'];
+                gaugeChart.data.datasets[0].backgroundColor = (newAvgRisk > 75) ? ['#1e293b','#1e293b', '#ef4444'] : (newAvgRisk > 50) ? ['#1e293b', '#f59e0b', '#1e293b'] : ['#10b981', '#1e293b', '#1e293b'];
                 gaugeChart.update(); $('#gauge-text-th').text(gText).css('color', rColor);
             }
 
@@ -550,9 +584,12 @@ apiKey: "AIzaSyBMW9SeWkYdrbU9byzphxpLd4JaAoIWKho",
                 let time = new Date(log.timestamp).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
                 let stId = log.station_id || 'ST-00';
                 
-                if(r > 75) feedHTML += `<div class="alert-item danger"><div class="flex-grow-1"><h6 class="text-red">🔥 ${stId} - วิกฤต!</h6><p>T:${log.temp}°C | PM:${log.pm25} | RH:${log.hum}%</p></div><div class="alert-time">${time}</div></div>`;
-                else if(r > 50) feedHTML += `<div class="alert-item warning"><div class="flex-grow-1"><h6 class="text-orange">⚠️ ${stId} - เฝ้าระวัง</h6><p>พบกลุ่มควัน / อุณหภูมิสูง</p></div><div class="alert-time">${time}</div></div>`;
-                else feedHTML += `<div class="alert-item"><div class="flex-grow-1"><h6 class="text-muted">✅ ${stId} - ปกติ</h6><p>สภาพแวดล้อมปลอดภัย</p></div><div class="alert-time">${time}</div></div>`;
+                // Add new-alert animation class for items added after first load
+                let animClass = !isFirstLoad ? 'new-alert' : '';
+
+                if(r > 75) feedHTML += `<div class="alert-item danger ${animClass}"><div class="flex-grow-1"><h6 class="text-red">🔥 ${stId} - วิกฤต!</h6><p>T:${log.temp}°C | PM:${log.pm25} | RH:${log.hum}%</p></div><div class="alert-time">${time}</div></div>`;
+                else if(r > 50) feedHTML += `<div class="alert-item warning ${animClass}"><div class="flex-grow-1"><h6 class="text-orange">⚠️ ${stId} - เฝ้าระวัง</h6><p>พบกลุ่มควัน / อุณหภูมิสูง</p></div><div class="alert-time">${time}</div></div>`;
+                else feedHTML += `<div class="alert-item ${animClass}"><div class="flex-grow-1"><h6 class="text-muted">✅ ${stId} - ปกติ</h6><p>สภาพแวดล้อมปลอดภัย</p></div><div class="alert-time">${time}</div></div>`;
             }
             $('#alerts-container-dash, #alerts-log-full').html(feedHTML || '<div class="text-center text-muted mt-4">ไม่มีข้อมูล</div>');
         }
@@ -565,16 +602,19 @@ apiKey: "AIzaSyBMW9SeWkYdrbU9byzphxpLd4JaAoIWKho",
             for (const [id, data] of Object.entries(stationMasterList)) {
                 const d = latestStationData[id];
                 let color = "#10b981", st = "Offline", tStr = "-", t="--", p="--", h="--", w="--", i=0.1, rScore=0, rText="ปกติ"; 
+                let pulseClass = '';
 
                 if (d) {
                     t=d.temp; p=d.pm25; w=d.wind; h=d.hum; tStr = new Date(d.timestamp).toLocaleTimeString('th-TH');
                     rScore = calculateRisk(t, p, h, w);
-                    if (rScore > 75) { color="#ef4444"; i=1.0; rText="🔴 วิกฤต"; } else if (rScore > 50) { color="#f59e0b"; i=0.7; rText="🟠 เสี่ยง"; } 
-                    if ((now - d.timestamp) > 600000) { st="Offline"; color="#64748b"; rText="⚫ ขาดการติดต่อ"; i=0;} else { st="Online"; }
+                    if (rScore > 75) { color="#ef4444"; i=1.0; rText="🔴 วิกฤต"; pulseClass = "radar-pulse-danger"; } 
+                    else if (rScore > 50) { color="#f59e0b"; i=0.7; rText="🟠 เสี่ยง"; pulseClass = "radar-pulse-warning"; } 
+                    if ((now - d.timestamp) > 600000) { st="Offline"; color="#64748b"; rText="⚫ ขาดการติดต่อ"; i=0; pulseClass = '';} else { st="Online"; }
                 }
                 if (isHeatmapMode && i > 0) heatData.push([data.lat, data.lng, i]); 
                 else if (!isHeatmapMode) {
-                    let mIcon = L.divIcon({ className: 'custom-marker', html: `<i class="fa-solid fa-location-dot fa-2x" style="color:${color}; text-shadow:0 0 15px ${color};"></i>`, iconSize: [30, 30], iconAnchor: [15, 30] });
+                    // Added pulseClass wrapper for radar animation
+                    let mIcon = L.divIcon({ className: 'custom-marker', html: `<div class="marker-wrapper ${pulseClass}"><i class="fa-solid fa-location-dot fa-2x" style="color:${color}; text-shadow:0 0 15px ${color};"></i></div>`, iconSize: [30, 30], iconAnchor: [15, 30] });
                     let delBtn = isAdmin ? `<button class="btn btn-sm btn-outline-danger w-100 mt-2" onclick="deleteStation('${id}')"><i class="fa-solid fa-trash"></i> ลบพิกัด</button>` : '';
                     let pop = `<div style="min-width:180px;"><h6 class="fw-bold mb-1" style="color:${color};">${data.name}</h6><span class="badge bg-secondary mb-2">${id} | ${st}</span><hr class="my-1 border-secondary"><div class="small mb-2 lh-lg mt-2">🌡️ Temp: <b>${t}°C</b><br>💨 PM2.5: <b>${p}</b><br>💧 RH: <b>${h}%</b><br>🔥 Risk: <b>${rText} (${rScore}/100)</b></div><a href="https://maps.google.com/?q=${data.lat},${data.lng}" target="_blank" class="btn btn-sm btn-outline-light w-100 mb-1"><i class="fa-solid fa-location-arrow"></i> นำทาง</a>${delBtn}</div>`;
                     mapMarkers[id] = L.marker([data.lat, data.lng], {icon: mIcon}).addTo(map).bindPopup(pop);
@@ -662,12 +702,14 @@ apiKey: "AIzaSyBMW9SeWkYdrbU9byzphxpLd4JaAoIWKho",
                 data.hum = data.hum !== undefined ? data.hum : (Math.floor(Math.random() * 15) + 45); 
                 
                 latestStationData[id] = data; allLogsMemory.push(data); if(allLogsMemory.length > 300) allLogsMemory.shift(); 
-                $('#last-update-time').html(`<i class="fa-regular fa-clock"></i> อัปเดต: ${new Date(data.timestamp).toLocaleTimeString('th-TH')}`);
                 
                 let tStr = new Date(data.timestamp).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
                 table.row.add([ tStr, `<span class="badge bg-secondary">${id}</span>`, data.temp, data.pm25, data.hum, data.wind ]).draw(false);
 
                 processData(); redrawMarkers();
+                
+                // หลังจากโหลดข้อมูลครั้งแรกเสร็จ ให้ตั้ง flag เป็น false เพื่อให้เริ่มแสดง Animation ได้
+                if(isFirstLoad) setTimeout(() => { isFirstLoad = false; }, 2000);
             });
         }
         $('#stationFilter').change(function() { currentFilter = $(this).val(); processData(); });
