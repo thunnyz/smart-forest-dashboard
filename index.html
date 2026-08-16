@@ -22,7 +22,7 @@
             --panel-bg: #101623;
             --sidebar-bg: #0a0f1a;
             --text-main: #f8fafc;
-            --text-muted: #64748b;
+            --text-muted: #94a3b8; /* ปรับให้สว่างขึ้นจากเดิม */
             --accent-green: #10b981;
             --accent-red: #ef4444;
             --accent-orange: #f59e0b;
@@ -33,6 +33,28 @@
 
         body { background-color: var(--bg-dark); color: var(--text-main); font-family: 'Kanit', sans-serif; overflow: hidden; margin: 0; }
         
+        /* =========================================
+           แก้ปัญหาสีฟอนต์กลืนไปกับพื้นหลัง (Dark Mode Fixes)
+           ========================================= */
+        .text-muted { color: var(--text-muted) !important; }
+        
+        /* ฟิกซ์ Input / Select / Date Picker ให้เป็นหน้าต่างมืดตัวหนังสือขาว */
+        .form-control, .form-select { background-color: #1e293b !important; color: #f8fafc !important; border-color: #334155 !important; }
+        .form-control:focus, .form-select:focus { background-color: #0f172a !important; color: #f8fafc !important; border-color: var(--accent-green) !important; box-shadow: 0 0 0 0.2rem rgba(16,185,129,0.25) !important; }
+        .form-control::placeholder { color: #64748b !important; }
+        ::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; } /* ทำให้ไอคอนปฏิทินเป็นสีขาว */
+
+        /* ฟิกซ์ข้อความในตาราง DataTables ให้เป็นสีขาว */
+        .dataTables_info, .dataTables_length label, .dataTables_filter label { color: var(--text-main) !important; }
+        .page-link { background-color: #1e293b !important; border-color: #334155 !important; color: var(--text-main) !important; }
+        .page-link:hover { background-color: #334155 !important; color: white !important; }
+        .page-item.active .page-link { background-color: var(--accent-green) !important; border-color: var(--accent-green) !important; color: white !important; }
+
+        /* ฟิกซ์ข้อความในหมุดแผนที่ (Leaflet Popup) ให้เป็นสีขาว */
+        .leaflet-container { font-family: 'Kanit', sans-serif; }
+        .leaflet-popup-content, .leaflet-popup-content * { color: var(--text-main) !important; }
+        .leaflet-popup-content b { color: white !important; }
+
         /* === Layout === */
         .app-container { display: flex; height: 100vh; overflow: hidden; }
         
@@ -80,7 +102,7 @@
         .alert-item { display: flex; gap: 10px; align-items: center; padding: 8px 10px; border-radius: 6px; background: rgba(255,255,255,0.02); margin-bottom: 8px; border-left: 3px solid var(--text-muted); }
         .alert-item.danger { border-left-color: var(--accent-red); background: rgba(239, 68, 68, 0.05); }
         .alert-item.warning { border-left-color: var(--accent-orange); background: rgba(245, 158, 11, 0.05); }
-        .alert-content h6 { margin: 0; font-size: 0.75rem; font-weight: 600; }
+        .alert-content h6 { margin: 0; font-size: 0.75rem; font-weight: 600; color: var(--text-main); }
         .alert-content p { margin: 0; font-size: 0.65rem; color: var(--text-muted); }
         .alert-time { font-size: 0.65rem; color: var(--text-muted); white-space: nowrap; margin-left: auto; }
 
@@ -115,8 +137,8 @@
                 <p class="text-muted small">ระบบบัญชาการเฝ้าระวังไฟป่าอัจฉริยะ</p>
             </div>
             <form id="loginForm">
-                <div class="mb-3"><label class="form-label small text-muted">EMAIL (ผู้ดูแลระบบ)</label><input type="email" id="adminEmail" class="form-control bg-dark text-white border-secondary" required></div>
-                <div class="mb-4"><label class="form-label small text-muted">PASSWORD</label><input type="password" id="adminPwd" class="form-control bg-dark text-white border-secondary" required></div>
+                <div class="mb-3"><label class="form-label small text-muted">EMAIL (ผู้ดูแลระบบ)</label><input type="email" id="adminEmail" class="form-control" required></div>
+                <div class="mb-4"><label class="form-label small text-muted">PASSWORD</label><input type="password" id="adminPwd" class="form-control" required></div>
                 <button type="submit" class="btn btn-success w-100 fw-bold py-2 mb-3">เข้าสู่ระบบ (ADMIN)</button>
                 <button type="button" id="guestBtn" class="btn btn-outline-secondary w-100 py-2 small">เข้าชมโหมดบุคคลทั่วไป (VIEW ONLY)</button>
             </form>
@@ -147,7 +169,7 @@
             <header class="top-header">
                 <h1 class="header-title" id="pageTitle"><i class="fa-solid fa-border-all" style="color:var(--accent-green);"></i> DASHBOARD</h1>
                 <div class="header-actions">
-                    <select id="stationFilter" class="form-select form-select-sm bg-dark text-white border-secondary" style="width: auto;">
+                    <select id="stationFilter" class="form-select form-select-sm" style="width: auto;">
                         <option value="ALL">🌐 ทุกสถานี (All Stations)</option>
                     </select>
                     <span id="last-update-time" class="badge bg-dark border border-secondary text-muted"><i class="fa-regular fa-clock"></i> รอข้อมูล...</span>
@@ -189,7 +211,7 @@
                                     <button class="btn btn-sm btn-outline-warning admin-only" id="addModeBtn" style="display:none;"><i class="fa-solid fa-location-dot"></i> เพิ่มพิกัด</button>
                                 </div>
                             </div>
-                            <div id="instructionBox" class="alert alert-danger py-1 px-2 m-2 small text-center" style="display:none; position:absolute; z-index:999; top:40px; left:0; right:0;">โหมดปักหมุด: จิ้มจุดที่ต้องการเพิ่มสถานีบนแผนที่</div>
+                            <div id="instructionBox" class="alert alert-danger text-white border-0 py-1 px-2 m-2 small text-center" style="background: rgba(239, 68, 68, 0.8); display:none; position:absolute; z-index:999; top:40px; left:0; right:0;">โหมดปักหมุด: จิ้มจุดที่ต้องการเพิ่มสถานีบนแผนที่</div>
                             <div id="map"></div>
                         </div>
                     </div>
@@ -262,7 +284,7 @@
                 </div>
             </div>
 
-            <!-- ================= 4. REPORTS (อัปเกรดความละเอียด) ================= -->
+            <!-- ================= 4. REPORTS ================= -->
             <div id="view-reports" class="view-section">
                 <div class="row g-3">
                     <div class="col-md-4">
@@ -270,17 +292,17 @@
                             <h6 class="panel-title"><i class="fa-solid fa-filter"></i> ตัวกรองรายงาน (Report Filters)</h6>
                             <div class="mb-3">
                                 <label class="form-label text-muted small">เลือกสถานี</label>
-                                <select id="reportStationFilter" class="form-select bg-dark text-white border-secondary">
+                                <select id="reportStationFilter" class="form-select">
                                     <option value="ALL">🌐 ทุกสถานี (All Stations)</option>
                                 </select>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label text-muted small">วันที่เริ่มต้น</label>
-                                <input type="date" id="reportStartDate" class="form-control bg-dark text-white border-secondary">
+                                <input type="date" id="reportStartDate" class="form-control">
                             </div>
                             <div class="mb-4">
                                 <label class="form-label text-muted small">วันที่สิ้นสุด</label>
-                                <input type="date" id="reportEndDate" class="form-control bg-dark text-white border-secondary">
+                                <input type="date" id="reportEndDate" class="form-control">
                             </div>
                             <button class="btn btn-primary w-100 fw-bold py-2 mb-2" onclick="generateReportPreview()"><i class="fa-solid fa-magnifying-glass"></i> ประมวลผลรายงาน</button>
                         </div>
@@ -312,13 +334,13 @@
                     <div class="row mt-3">
                         <div class="col-md-6">
                             <label class="form-label text-muted small">เกณฑ์อุณหภูมิแจ้งเตือน (°C)</label>
-                            <input type="number" class="form-control bg-dark text-white border-secondary mb-3" value="38" disabled>
+                            <input type="number" class="form-control mb-3" value="38" disabled>
                             <label class="form-label text-muted small">เกณฑ์ PM2.5 แจ้งเตือน (µg/m³)</label>
-                            <input type="number" class="form-control bg-dark text-white border-secondary mb-3" value="100" disabled>
+                            <input type="number" class="form-control mb-3" value="100" disabled>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label text-muted small">LINE Notify Token</label>
-                            <input type="password" class="form-control bg-dark text-white border-secondary mb-3" value="*************************" disabled>
+                            <input type="password" class="form-control mb-3" value="*************************" disabled>
                             <div class="alert alert-warning small mt-4" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); color: var(--accent-orange);"><i class="fa-solid fa-lock"></i> การตั้งค่าถูกล็อคไว้ในเวอร์ชัน Demo</div>
                         </div>
                     </div>
@@ -332,11 +354,11 @@
     <div class="modal fade" id="stationModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content bg-dark text-white border-secondary">
-                <div class="modal-header border-secondary"><h5 class="modal-title"><i class="fa-solid fa-location-dot"></i> เพิ่มสถานีใหม่</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+                <div class="modal-header border-secondary"><h5 class="modal-title text-white"><i class="fa-solid fa-location-dot"></i> เพิ่มสถานีใหม่</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
                 <div class="modal-body">
                     <form id="stationForm">
                         <div class="mb-3"><label class="form-label text-muted small">รหัสสถานี (Auto)</label><input type="text" id="stId" class="form-control bg-secondary text-white border-0" readonly></div>
-                        <div class="mb-3"><label class="form-label fw-bold">ชื่อจุดติดตั้ง</label><input type="text" id="stName" class="form-control bg-dark text-white border-secondary" required></div>
+                        <div class="mb-3"><label class="form-label text-white fw-bold">ชื่อจุดติดตั้ง</label><input type="text" id="stName" class="form-control" required></div>
                         <input type="hidden" id="stLat"><input type="hidden" id="stLng">
                         <button type="submit" class="btn btn-success w-100 fw-bold py-2">บันทึกพิกัด</button>
                     </form>
@@ -433,7 +455,7 @@ apiKey: "AIzaSyBMW9SeWkYdrbU9byzphxpLd4JaAoIWKho",
         // --- Table & Charts ---
         const table = $('#logTable').DataTable({ dom: 'rt<"mt-3"p>', order: [[0, 'desc']], language: { url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/th.json' } });
 
-        Chart.defaults.color = '#64748b'; Chart.defaults.font.family = 'Kanit';
+        Chart.defaults.color = '#94a3b8'; Chart.defaults.font.family = 'Kanit';
         const hideLegend = { plugins: { legend: { display: false } } };
         
         const gaugeChart = new Chart(document.getElementById('gaugeChart'), {
@@ -588,10 +610,10 @@ apiKey: "AIzaSyBMW9SeWkYdrbU9byzphxpLd4JaAoIWKho",
 
             let html = `
                 <div class="row g-2 text-center mb-4 mt-2">
-                    <div class="col-md-3"><div class="p-3 bg-dark rounded border border-secondary"><div class="text-muted small">อุณหภูมิสูงสุด</div><h4 class="text-orange mb-0">${maxT}°C</h4></div></div>
-                    <div class="col-md-3"><div class="p-3 bg-dark rounded border border-secondary"><div class="text-muted small">PM2.5 สูงสุด</div><h4 class="text-green mb-0">${maxP}</h4></div></div>
-                    <div class="col-md-3"><div class="p-3 bg-dark rounded border border-secondary"><div class="text-muted small">บันทึกความเสี่ยงวิกฤต</div><h4 class="text-danger mb-0">${alerts} ครั้ง</h4></div></div>
-                    <div class="col-md-3"><div class="p-3 bg-dark rounded border border-secondary"><div class="text-muted small">จำนวน Log ทั้งหมด</div><h4 class="text-info mb-0">${currentReportLogs.length}</h4></div></div>
+                    <div class="col-md-3"><div class="p-3 bg-dark rounded border border-secondary"><div class="text-muted small">อุณหภูมิสูงสุด</div><h4 style="color:var(--accent-orange);" class="mb-0">${maxT}°C</h4></div></div>
+                    <div class="col-md-3"><div class="p-3 bg-dark rounded border border-secondary"><div class="text-muted small">PM2.5 สูงสุด</div><h4 style="color:var(--accent-green);" class="mb-0">${maxP}</h4></div></div>
+                    <div class="col-md-3"><div class="p-3 bg-dark rounded border border-secondary"><div class="text-muted small">บันทึกความเสี่ยงวิกฤต</div><h4 style="color:var(--accent-red);" class="mb-0">${alerts} ครั้ง</h4></div></div>
+                    <div class="col-md-3"><div class="p-3 bg-dark rounded border border-secondary"><div class="text-muted small">จำนวน Log ทั้งหมด</div><h4 style="color:var(--accent-blue);" class="mb-0">${currentReportLogs.length}</h4></div></div>
                 </div>
                 <h6 class="text-muted small mb-2"><i class="fa-solid fa-list"></i> ตัวอย่างข้อมูล (5 รายการล่าสุด)</h6>
                 <div class="table-responsive">
@@ -601,7 +623,7 @@ apiKey: "AIzaSyBMW9SeWkYdrbU9byzphxpLd4JaAoIWKho",
                             ${currentReportLogs.slice(-5).reverse().map(d => {
                                 let r = calculateRisk(d.temp, d.pm25, (d.hum||60), d.wind);
                                 let st = r > 75 ? '<span class="badge bg-danger">วิกฤต</span>' : (r > 50 ? '<span class="badge bg-warning text-dark">เสี่ยง</span>' : '<span class="badge bg-success">ปกติ</span>');
-                                return `<tr><td>${new Date(d.timestamp).toLocaleString('th-TH')}</td><td>${d.station_id || 'ST-00'}</td><td>${d.temp}</td><td>${d.pm25}</td><td>${d.hum||60}</td><td>${st}</td></tr>`;
+                                return `<tr><td class="text-white">${new Date(d.timestamp).toLocaleString('th-TH')}</td><td class="text-white">${d.station_id || 'ST-00'}</td><td class="text-white">${d.temp}</td><td class="text-white">${d.pm25}</td><td class="text-white">${d.hum||60}</td><td>${st}</td></tr>`;
                             }).join('')}
                         </tbody>
                     </table>
