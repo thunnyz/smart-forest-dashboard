@@ -53,26 +53,29 @@
            ✨ DYNAMIC & REAL-TIME ANIMATIONS ✨
            ========================================= */
 
-        /* 1. จุดแดงกะพริบ LIVE */
         .live-dot { display: inline-block; width: 10px; height: 10px; background-color: var(--accent-red); border-radius: 50%; margin-right: 8px; box-shadow: 0 0 10px var(--accent-red); animation: blink-live 1.5s infinite ease-in-out; }
         @keyframes blink-live { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1); } }
-
-        /* 2. สว่างวาบเมื่อข้อมูลเปลี่ยน (Data Update Flash) */
         .flash-update { animation: data-flash 1s ease-out; }
-        @keyframes data-flash {
-            0% { color: #ffffff !important; text-shadow: 0 0 20px #ffffff, 0 0 30px #ffffff; transform: scale(1.05); }
-            100% { transform: scale(1); } /* กลับไปสีเดิมที่เซ็ตไว้ผ่าน inline style / class */
-        }
-
-        /* 3. คลื่นเรดาร์บนหมุดแผนที่ (Radar Pulse) */
+        @keyframes data-flash { 0% { color: #ffffff !important; text-shadow: 0 0 20px #ffffff, 0 0 30px #ffffff; transform: scale(1.05); } 100% { transform: scale(1); } }
+        
         .marker-wrapper { position: relative; display: flex; justify-content: center; align-items: center; }
         .radar-pulse-danger::before, .radar-pulse-warning::before { content: ''; position: absolute; width: 30px; height: 30px; border-radius: 50%; z-index: -1; animation: radar-wave 2s infinite ease-out; }
         .radar-pulse-danger::before { background-color: rgba(239, 68, 68, 0.6); }
         .radar-pulse-warning::before { background-color: rgba(245, 158, 11, 0.6); animation-duration: 2.5s; }
-        @keyframes radar-wave {
-            0% { transform: scale(0.5); opacity: 1; }
-            100% { transform: scale(2.5); opacity: 0; }
-        }
+        @keyframes radar-wave { 0% { transform: scale(0.5); opacity: 1; } 100% { transform: scale(2.5); opacity: 0; } }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+        @keyframes bounce-drop { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(5px); } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-3px) rotate(-5deg); } 75% { transform: translateX(3px) rotate(5deg); } }
+        @keyframes fadeUp { 0% { opacity: 0; transform: translateY(5px); } 100% { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeDown { 0% { opacity: 0; transform: translateY(-5px); } 100% { opacity: 1; transform: translateY(0); } }
+
+        .trend-arrow { font-size: 1rem; margin-left: 5px; font-weight: bold; display: inline-block;}
+        .trend-up { color: var(--accent-red); animation: fadeUp 0.3s forwards; text-shadow: 0 0 10px rgba(239,68,68,0.5); }
+        .trend-down { color: var(--accent-blue); animation: fadeDown 0.3s forwards; text-shadow: 0 0 10px rgba(59,130,246,0.5); }
+        .anim-shake { animation: shake 0.2s ease-in-out infinite !important; color: var(--accent-red) !important; opacity: 0.8 !important;}
+
 
         /* === Layout === */
         .app-container { display: flex; height: 100vh; overflow: hidden; }
@@ -105,7 +108,7 @@
         .stat-card { position: relative; overflow: hidden; padding: 15px; height: 90px; display: flex; flex-direction: column; justify-content: center; }
         .stat-value { font-size: 1.8rem; font-weight: 800; line-height: 1.1; margin-top: 5px; display: inline-block;}
         .stat-label { font-size: 0.75rem; color: var(--text-muted); }
-        .stat-icon { position: absolute; right: 15px; top: 15px; font-size: 1.5rem; opacity: 0.15; }
+        .stat-icon { position: absolute; right: 15px; top: 15px; font-size: 1.5rem; opacity: 0.15; transition: all 0.3s;}
         
         /* Map */
         #map { height: 380px; border-radius: 8px; width: 100%; background: #000; }
@@ -130,7 +133,7 @@
         .chart-header { font-size: 0.75rem; margin-bottom: 5px; color: var(--text-muted); display: flex; align-items: center; gap: 5px; }
 
         /* Login Screen */
-        #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-dark); z-index: 9999; display: flex; align-items: center; justify-content: center; }
+        #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-dark); z-index: 9999; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
         .login-card { background: var(--panel-bg); padding: 40px; border-radius: 15px; border: 1px solid var(--border-color); box-shadow: 0 20px 40px rgba(0,0,0,0.5); width: 100%; max-width: 400px; }
 
         @media print {
@@ -183,14 +186,13 @@
         <!-- MAIN CONTENT -->
         <main class="main-content" id="scroll-area">
             
-            <!-- TOP HEADER (LIVE INDICATOR ADDED HERE) -->
+            <!-- TOP HEADER -->
             <header class="top-header">
                 <h1 class="header-title" id="pageTitle"><i class="fa-solid fa-border-all" style="color:var(--accent-green);"></i> DASHBOARD</h1>
                 <div class="header-actions">
                     <select id="stationFilter" class="form-select form-select-sm" style="width: auto;">
                         <option value="ALL">🌐 ทุกสถานี (All Stations)</option>
                     </select>
-                    <!-- ✨ เปลี่ยนคำว่ารอข้อมูล เป็น LIVE ตรงนี้ ✨ -->
                     <span id="last-update-time" class="badge bg-dark border border-secondary text-muted d-flex align-items-center"><span class="live-dot"></span> LIVE </span>
                     <span id="adminBadge" class="badge bg-danger" style="display:none;"><i class="fa-solid fa-user-shield"></i> Admin</span>
                     <button class="btn btn-sm btn-outline-danger" id="logoutBtn" style="display:none;" title="ออกจากระบบ"><i class="fa-solid fa-power-off"></i></button>
@@ -204,10 +206,19 @@
                 <!-- ROW 1: STAT CARDS -->
                 <div class="row g-2 mb-3">
                     <div class="col-md-2"><div class="panel stat-card"><div class="stat-label">สถานี (Online)</div><div class="stat-value"><span id="stat-online" style="color:var(--accent-green);">0</span><span class="fs-6 text-muted">/<span id="stat-total">0</span></span></div><i class="fa-solid fa-satellite-dish stat-icon" style="color:var(--accent-green);"></i></div></div>
-                    <div class="col-md-2"><div class="panel stat-card"><div class="stat-label">อุณหภูมิ (°C)</div><div class="stat-value" id="avg-temp" style="color:var(--accent-orange);">--</div><i class="fa-solid fa-temperature-half stat-icon" style="color:var(--accent-orange);"></i></div></div>
-                    <div class="col-md-2"><div class="panel stat-card"><div class="stat-label">PM2.5 (µg/m³)</div><div class="stat-value" id="max-pm25-val"><span id="max-pm25" style="color:var(--accent-green);">--</span></div><i class="fa-solid fa-smog stat-icon" style="color:var(--accent-green);"></i></div></div>
-                    <div class="col-md-2"><div class="panel stat-card"><div class="stat-label">ความชื้น (RH %)</div><div class="stat-value" id="avg-hum" style="color:var(--accent-blue);">--</div><i class="fa-solid fa-droplet stat-icon" style="color:var(--accent-blue);"></i></div></div>
-                    <div class="col-md-2"><div class="panel stat-card"><div class="stat-label">ลม (m/s)</div><div class="stat-value" id="avg-wind" style="color:var(--accent-purple);">--</div><i class="fa-solid fa-wind stat-icon" style="color:var(--accent-purple);"></i></div></div>
+                    
+                    <!-- Temp Card -->
+                    <div class="col-md-2"><div class="panel stat-card"><div class="stat-label">อุณหภูมิ (°C)</div><div class="stat-value" style="color:var(--accent-orange);"><span id="avg-temp">--</span><span id="temp-trend" class="trend-arrow"></span></div><i id="temp-icon" class="fa-solid fa-temperature-half stat-icon" style="color:var(--accent-orange);"></i></div></div>
+                    
+                    <!-- PM2.5 Card -->
+                    <div class="col-md-2"><div class="panel stat-card"><div class="stat-label">PM2.5 (µg/m³)</div><div class="stat-value" id="max-pm25-val"><span id="max-pm25" style="color:var(--accent-green);">--</span></div><i id="pm-icon" class="fa-solid fa-smog stat-icon" style="color:var(--accent-green);"></i></div></div>
+                    
+                    <!-- Humidity Card -->
+                    <div class="col-md-2"><div class="panel stat-card"><div class="stat-label">ความชื้น (RH %)</div><div class="stat-value" style="color:var(--accent-blue);"><span id="avg-hum">--</span></div><i id="hum-icon" class="fa-solid fa-droplet stat-icon" style="color:var(--accent-blue);"></i></div></div>
+                    
+                    <!-- Wind Card -->
+                    <div class="col-md-2"><div class="panel stat-card"><div class="stat-label">ลม (m/s)</div><div class="stat-value" style="color:var(--accent-purple);"><span id="avg-wind">--</span></div><i id="wind-icon" class="fa-solid fa-wind stat-icon" style="color:var(--accent-purple);"></i></div></div>
+                    
                     <div class="col-md-2">
                         <div class="panel stat-card text-center" id="fire-risk-panel" style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.3);">
                             <div class="stat-label text-white fw-bold">FIRE RISK SCORE</div>
@@ -346,21 +357,43 @@
                 </div>
             </div>
 
-            <!-- ================= 5. SETTINGS ================= -->
+            <!-- ================= 5. SETTINGS & SIMULATION ================= -->
             <div id="view-settings" class="view-section">
-                <div class="panel">
-                    <h6 class="panel-title"><i class="fa-solid fa-gear"></i> System Settings (Admin Only)</h6>
-                    <div class="row mt-3">
-                        <div class="col-md-6">
-                            <label class="form-label text-muted small">เกณฑ์อุณหภูมิแจ้งเตือน (°C)</label>
-                            <input type="number" class="form-control mb-3" value="38" disabled>
-                            <label class="form-label text-muted small">เกณฑ์ PM2.5 แจ้งเตือน (µg/m³)</label>
-                            <input type="number" class="form-control mb-3" value="100" disabled>
+                <div class="row g-3">
+                    <div class="col-md-7">
+                        <div class="panel h-100">
+                            <h6 class="panel-title"><i class="fa-solid fa-gear"></i> System Settings (Admin Only)</h6>
+                            <div class="row mt-3">
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted small">เกณฑ์อุณหภูมิแจ้งเตือน (°C)</label>
+                                    <input type="number" class="form-control mb-3" value="38" disabled>
+                                    <label class="form-label text-muted small">เกณฑ์ PM2.5 แจ้งเตือน (µg/m³)</label>
+                                    <input type="number" class="form-control mb-3" value="100" disabled>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted small">LINE Notify Token</label>
+                                    <input type="password" class="form-control mb-3" value="*************************" disabled>
+                                    <div class="alert alert-warning small mt-4" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); color: var(--accent-orange);"><i class="fa-solid fa-lock"></i> การตั้งค่าถูกล็อคไว้ในเวอร์ชัน Demo</div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label text-muted small">LINE Notify Token</label>
-                            <input type="password" class="form-control mb-3" value="*************************" disabled>
-                            <div class="alert alert-warning small mt-4" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); color: var(--accent-orange);"><i class="fa-solid fa-lock"></i> การตั้งค่าถูกล็อคไว้ในเวอร์ชัน Demo</div>
+                    </div>
+
+                    <!-- ✨ ส่วนจำลองการเกิดไฟป่า (Simulation) ✨ -->
+                    <div class="col-md-5">
+                        <div class="panel h-100 text-center admin-only" style="border: 1px solid var(--accent-red); background: rgba(239, 68, 68, 0.05); display:none;">
+                            <h6 class="panel-title text-start text-red border-danger"><i class="fa-solid fa-flask-vial"></i> System Testing</h6>
+                            <i class="fa-solid fa-fire-flame-curved text-red mt-3" style="font-size: 3.5rem; animation: float 2s infinite;"></i>
+                            <h5 class="fw-bold mt-3 text-white">ระบบจำลองการเกิดไฟป่า</h5>
+                            <p class="text-muted small">ใช้สำหรับทดสอบหน้า Dashboard (กราฟ, Heatmap) เพื่อนำเสนอคณะกรรมการ</p>
+                            
+                            <button onclick="triggerSimulation()" class="btn btn-danger w-100 fw-bold py-2 mt-2" style="box-shadow: 0 0 15px rgba(239,68,68,0.5);">
+                                <i class="fa-solid fa-rocket"></i> กดเพื่อจำลองเหตุการณ์ไฟป่า
+                            </button>
+                        </div>
+                        <div class="panel h-100 text-center guest-only d-flex flex-column justify-content-center">
+                            <i class="fa-solid fa-lock text-muted fs-1 mb-3"></i>
+                            <p class="text-muted small">เครื่องมือจำลองไฟป่าสงวนไว้สำหรับผู้ดูแลระบบเท่านั้น</p>
                         </div>
                     </div>
                 </div>
@@ -386,6 +419,13 @@
         </div>
     </div>
 
+    <!-- Toast -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+        <div id="alarmToast" class="toast align-items-center text-white bg-danger border-0 shadow-lg" role="alert">
+            <div class="d-flex"><div class="toast-body fw-bold fs-6" id="toastMessage">🚨 พบความเสี่ยงไฟป่า!</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -406,7 +446,7 @@
         // ⚠️ ใส่ apiKey ของ Firebase ตรงนี้
         // ==========================================
         const firebaseConfig = {
-apiKey: "AIzaSyBMW9SeWkYdrbU9byzphxpLd4JaAoIWKho",
+                apiKey: "AIzaSyBMW9SeWkYdrbU9byzphxpLd4JaAoIWKho",
               authDomain: "smart-forest-station.firebaseapp.com",
               databaseURL: "https://smart-forest-station-default-rtdb.asia-southeast1.firebasedatabase.app",
               projectId: "smart-forest-station",
@@ -421,23 +461,17 @@ apiKey: "AIzaSyBMW9SeWkYdrbU9byzphxpLd4JaAoIWKho",
         let map, heatLayer = null, mapCircles = {}, mapMarkers = {};
         let isHeatmapMode = false, isAddMode = false;
         let isFirstLoad = true;
+        let prevAvgTemp = null; 
+        const alarmSound = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
 
-        // --- Defaults for Reports ---
         const todayStr = new Date().toISOString().split('T')[0];
-        $('#reportStartDate').val(todayStr);
-        $('#reportEndDate').val(todayStr);
+        $('#reportStartDate').val(todayStr); $('#reportEndDate').val(todayStr);
 
-        // --- Flash Animation Helper ---
         function flashElement(id) {
             let el = document.getElementById(id);
-            if(el) {
-                el.classList.remove('flash-update');
-                void el.offsetWidth; // trigger reflow
-                el.classList.add('flash-update');
-            }
+            if(el) { el.classList.remove('flash-update'); void el.offsetWidth; el.classList.add('flash-update'); }
         }
 
-        // --- SPA Navigation ---
         $('.nav-item').click(function(e) {
             e.preventDefault();
             let target = $(this).data('target');
@@ -460,11 +494,10 @@ apiKey: "AIzaSyBMW9SeWkYdrbU9byzphxpLd4JaAoIWKho",
             if(map) map.invalidateSize();
         });
 
-        // --- Auth System ---
         function initDashboard() {
             $('#login-screen').fadeOut(); $('#main-dashboard').fadeIn(() => { initMap(); });
-            if(isAdmin) { $('#adminBadge, #logoutBtn, .admin-only').show(); $('#guestBadge, #backToLoginBtn').hide(); $('body').removeClass('guest-mode'); }
-            else { $('#guestBadge, #backToLoginBtn').show(); $('#adminBadge, #logoutBtn, .admin-only').hide(); $('body').addClass('guest-mode'); }
+            if(isAdmin) { $('#adminBadge, #logoutBtn, .admin-only').show(); $('#guestBadge, #backToLoginBtn, .guest-only').hide(); $('body').removeClass('guest-mode'); }
+            else { $('#guestBadge, #backToLoginBtn, .guest-only').show(); $('#adminBadge, #logoutBtn, .admin-only').hide(); $('body').addClass('guest-mode'); }
         }
         function returnToLogin() { isAdmin=false; isGuest=false; $('#main-dashboard').hide(); $('#login-screen').fadeIn(); $('#loginForm')[0].reset(); }
         
@@ -474,7 +507,6 @@ apiKey: "AIzaSyBMW9SeWkYdrbU9byzphxpLd4JaAoIWKho",
         $('#backToLoginBtn').click(returnToLogin);
         $('#logoutBtn').click(() => { if(confirm("ออกจากระบบ?")) auth.signOut().then(returnToLogin); });
 
-        // --- Table & Charts ---
         const table = $('#logTable').DataTable({ dom: 'rt<"mt-3"p>', order: [[0, 'desc']], language: { url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/th.json' } });
 
         Chart.defaults.color = '#94a3b8'; Chart.defaults.font.family = 'Kanit';
@@ -494,7 +526,6 @@ apiKey: "AIzaSyBMW9SeWkYdrbU9byzphxpLd4JaAoIWKho",
         const humChart = createMiniChart('humChart', '#3b82f6', 'rgba(59, 130, 246, 0.1)');
         const windChart = createMiniChart('windChart', '#8b5cf6', 'rgba(139, 92, 246, 0.1)');
 
-        // --- Map Setup ---
         function initMap() {
             if(map) return;
             map = L.map('map', {zoomControl: true}).setView([13.95, 101.75], 11);
@@ -510,17 +541,11 @@ apiKey: "AIzaSyBMW9SeWkYdrbU9byzphxpLd4JaAoIWKho",
         $('#stationForm').submit(e => { e.preventDefault(); db.ref('stations/' + $('#stId').val()).set({ name: $('#stName').val(), lat: parseFloat($('#stLat').val()), lng: parseFloat($('#stLng').val()) }).then(() => $('#stationModal').modal('hide')); });
         window.deleteStation = id => { if(isAdmin && confirm(`ลบสถานี ${id}?`)) db.ref('stations/' + id).remove(); };
 
-        // --- Risk Algorithm ---
         function calculateRisk(t, p, h, w) {
-            let score = 0;
-            score += (t / 45) * 40;     
-            score += (Math.min(p, 200) / 200) * 30; 
-            score += ((100 - h) / 100) * 15; 
-            score += (Math.min(w, 20) / 20) * 15; 
+            let score = 0; score += (t / 45) * 40; score += (Math.min(p, 200) / 200) * 30; score += ((100 - h) / 100) * 15; score += (Math.min(w, 20) / 20) * 15; 
             return Math.max(0, Math.min(100, Math.round(score)));
         }
 
-        // --- Core Data Processor ---
         function processData() {
             let dataArr = currentFilter === 'ALL' ? allLogsMemory : allLogsMemory.filter(d => (d.station_id || "ST-00") === currentFilter);
             let chartData = dataArr.slice(-20);
@@ -549,7 +574,6 @@ apiKey: "AIzaSyBMW9SeWkYdrbU9byzphxpLd4JaAoIWKho",
                 let newAvgHum = (sumH/validSt).toFixed(0);
                 let newAvgRisk = Math.round(sumScore/validSt);
 
-                // Update text and trigger flash animation if it's not the first load
                 if(!isFirstLoad) {
                     if($('#avg-temp').text() !== newAvgTemp) flashElement('avg-temp');
                     if($('#max-pm25').text() != maxP) flashElement('max-pm25');
@@ -558,12 +582,28 @@ apiKey: "AIzaSyBMW9SeWkYdrbU9byzphxpLd4JaAoIWKho",
                     if($('#fire-risk-score').text() != newAvgRisk) flashElement('fire-risk-score');
                 }
 
-                $('#avg-temp').text(newAvgTemp);
-                $('#avg-wind').text(newAvgWind);
-                $('#avg-hum').text(newAvgHum);
-                $('#max-pm25').text(maxP);
-                $('#fire-risk-score').text(newAvgRisk);
-                $('#algo-score-display').text(newAvgRisk);
+                if (prevAvgTemp !== null && prevAvgTemp != newAvgTemp) {
+                    if (parseFloat(newAvgTemp) > parseFloat(prevAvgTemp)) $('#temp-trend').html('<i class="fa-solid fa-arrow-up"></i>').removeClass('trend-down').addClass('trend-up');
+                    else $('#temp-trend').html('<i class="fa-solid fa-arrow-down"></i>').removeClass('trend-up').addClass('trend-down');
+                }
+                prevAvgTemp = newAvgTemp;
+                if (parseFloat(newAvgTemp) >= 38) $('#temp-icon').addClass('anim-shake'); else $('#temp-icon').removeClass('anim-shake');
+
+                let windSpeed = parseFloat(newAvgWind); let windIcon = document.getElementById('wind-icon');
+                if(windSpeed > 0) { let speed = Math.max(0.2, 2.0 / windSpeed); windIcon.style.animation = `spin ${speed}s linear infinite`; windIcon.style.opacity = '0.4'; } 
+                else { windIcon.style.animation = 'none'; windIcon.style.opacity = '0.15'; }
+
+                let pmIcon = document.getElementById('pm-icon');
+                if(maxP > 100) pmIcon.style.animation = 'float 0.5s ease-in-out infinite';
+                else if(maxP > 50) pmIcon.style.animation = 'float 1.5s ease-in-out infinite';
+                else pmIcon.style.animation = 'float 3s ease-in-out infinite';
+
+                let humIcon = document.getElementById('hum-icon');
+                let humSpeed = Math.max(0.5, 3.0 - (parseFloat(newAvgHum) / 50));
+                humIcon.style.animation = `bounce-drop ${humSpeed}s ease-in-out infinite`;
+
+                $('#avg-temp').text(newAvgTemp); $('#avg-wind').text(newAvgWind); $('#avg-hum').text(newAvgHum); $('#max-pm25').text(maxP);
+                $('#fire-risk-score').text(newAvgRisk); $('#algo-score-display').text(newAvgRisk);
                 
                 let rText = "LOW 🟢", rColor = "var(--accent-green)", gText = "ปกติ";
                 if(newAvgRisk > 75) { rText = "CRITICAL 🔥"; rColor = "var(--accent-red)"; gText = "วิกฤต"; }
@@ -583,8 +623,6 @@ apiKey: "AIzaSyBMW9SeWkYdrbU9byzphxpLd4JaAoIWKho",
                 let r = calculateRisk(log.temp, log.pm25, log.hum, log.wind);
                 let time = new Date(log.timestamp).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
                 let stId = log.station_id || 'ST-00';
-                
-                // Add new-alert animation class for items added after first load
                 let animClass = !isFirstLoad ? 'new-alert' : '';
 
                 if(r > 75) feedHTML += `<div class="alert-item danger ${animClass}"><div class="flex-grow-1"><h6 class="text-red">🔥 ${stId} - วิกฤต!</h6><p>T:${log.temp}°C | PM:${log.pm25} | RH:${log.hum}%</p></div><div class="alert-time">${time}</div></div>`;
@@ -613,7 +651,6 @@ apiKey: "AIzaSyBMW9SeWkYdrbU9byzphxpLd4JaAoIWKho",
                 }
                 if (isHeatmapMode && i > 0) heatData.push([data.lat, data.lng, i]); 
                 else if (!isHeatmapMode) {
-                    // Added pulseClass wrapper for radar animation
                     let mIcon = L.divIcon({ className: 'custom-marker', html: `<div class="marker-wrapper ${pulseClass}"><i class="fa-solid fa-location-dot fa-2x" style="color:${color}; text-shadow:0 0 15px ${color};"></i></div>`, iconSize: [30, 30], iconAnchor: [15, 30] });
                     let delBtn = isAdmin ? `<button class="btn btn-sm btn-outline-danger w-100 mt-2" onclick="deleteStation('${id}')"><i class="fa-solid fa-trash"></i> ลบพิกัด</button>` : '';
                     let pop = `<div style="min-width:180px;"><h6 class="fw-bold mb-1" style="color:${color};">${data.name}</h6><span class="badge bg-secondary mb-2">${id} | ${st}</span><hr class="my-1 border-secondary"><div class="small mb-2 lh-lg mt-2">🌡️ Temp: <b>${t}°C</b><br>💨 PM2.5: <b>${p}</b><br>💧 RH: <b>${h}%</b><br>🔥 Risk: <b>${rText} (${rScore}/100)</b></div><a href="https://maps.google.com/?q=${data.lat},${data.lng}" target="_blank" class="btn btn-sm btn-outline-light w-100 mb-1"><i class="fa-solid fa-location-arrow"></i> นำทาง</a>${delBtn}</div>`;
@@ -684,6 +721,33 @@ apiKey: "AIzaSyBMW9SeWkYdrbU9byzphxpLd4JaAoIWKho",
 
         window.exportReportPDF = function() { window.print(); };
 
+        // ================= SIMULATION SYSTEM =================
+        window.triggerSimulation = function() {
+            if(!confirm("⚠️ ยืนยันการจำลองเหตุการณ์ไฟป่า?\nระบบจะส่งค่าวิกฤตเข้าไปที่สถานีที่มีอยู่ในระบบทันที")) return;
+            
+            let targetStation = "ST-01"; 
+            let stationKeys = Object.keys(stationMasterList);
+            if(stationKeys.length > 0) targetStation = stationKeys[0]; 
+
+            let dbRef = firebase.database().ref('logs');
+            let mockData = {
+                station_id: targetStation,
+                temp: 48.5,       
+                pm25: 650,        
+                hum: 25,          
+                wind: 18,         
+                rain: 0,
+                battery: 99,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            };
+
+            dbRef.push(mockData).then(() => {
+                $('.nav-item[data-target="view-dashboard"]').first().click();
+                $('#toastMessage').html(`🚨 SIMULATION MODE!<br>กำลังจำลองสถานการณ์ไฟป่าที่ ${targetStation}`);
+                new bootstrap.Toast(document.getElementById('alarmToast')).show();
+            }).catch((err) => alert("Error: " + err.message));
+        };
+
         // --- Firebase Init ---
         if (db) {
             db.ref('stations').on('value', snap => {
@@ -708,7 +772,6 @@ apiKey: "AIzaSyBMW9SeWkYdrbU9byzphxpLd4JaAoIWKho",
 
                 processData(); redrawMarkers();
                 
-                // หลังจากโหลดข้อมูลครั้งแรกเสร็จ ให้ตั้ง flag เป็น false เพื่อให้เริ่มแสดง Animation ได้
                 if(isFirstLoad) setTimeout(() => { isFirstLoad = false; }, 2000);
             });
         }
