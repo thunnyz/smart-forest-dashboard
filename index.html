@@ -76,7 +76,6 @@
         .trend-down { color: var(--accent-blue); animation: fadeDown 0.3s forwards; text-shadow: 0 0 10px rgba(59,130,246,0.5); }
         .anim-shake { animation: shake 0.2s ease-in-out infinite !important; color: var(--accent-red) !important; opacity: 0.8 !important;}
 
-
         /* === Layout === */
         .app-container { display: flex; height: 100vh; overflow: hidden; }
         
@@ -191,7 +190,7 @@
                 <h1 class="header-title" id="pageTitle"><i class="fa-solid fa-border-all" style="color:var(--accent-green);"></i> DASHBOARD</h1>
                 <div class="header-actions">
                     <select id="stationFilter" class="form-select form-select-sm" style="width: auto;">
-                        <option value="ALL">🌐 ทุกสถานี (All Stations)</option>
+                        <option value="ALL">🌐 ภาพรวมทุกพื้นที่ (ALL)</option>
                     </select>
                     <span id="last-update-time" class="badge bg-dark border border-secondary text-muted d-flex align-items-center"><span class="live-dot"></span> LIVE </span>
                     <span id="adminBadge" class="badge bg-danger" style="display:none;"><i class="fa-solid fa-user-shield"></i> Admin</span>
@@ -208,16 +207,16 @@
                     <div class="col-md-2"><div class="panel stat-card"><div class="stat-label">สถานี (Online)</div><div class="stat-value"><span id="stat-online" style="color:var(--accent-green);">0</span><span class="fs-6 text-muted">/<span id="stat-total">0</span></span></div><i class="fa-solid fa-satellite-dish stat-icon" style="color:var(--accent-green);"></i></div></div>
                     
                     <!-- Temp Card -->
-                    <div class="col-md-2"><div class="panel stat-card"><div class="stat-label">อุณหภูมิ (°C)</div><div class="stat-value" style="color:var(--accent-orange);"><span id="avg-temp">--</span><span id="temp-trend" class="trend-arrow"></span></div><i id="temp-icon" class="fa-solid fa-temperature-half stat-icon" style="color:var(--accent-orange);"></i></div></div>
+                    <div class="col-md-2"><div class="panel stat-card"><div class="stat-label" id="lbl-temp">อุณหภูมิ (เฉลี่ย)</div><div class="stat-value" style="color:var(--accent-orange);"><span id="avg-temp">--</span><span id="temp-trend" class="trend-arrow"></span></div><i id="temp-icon" class="fa-solid fa-temperature-half stat-icon" style="color:var(--accent-orange);"></i></div></div>
                     
                     <!-- PM2.5 Card -->
-                    <div class="col-md-2"><div class="panel stat-card"><div class="stat-label">PM2.5 (µg/m³)</div><div class="stat-value" id="max-pm25-val"><span id="max-pm25" style="color:var(--accent-green);">--</span></div><i id="pm-icon" class="fa-solid fa-smog stat-icon" style="color:var(--accent-green);"></i></div></div>
+                    <div class="col-md-2"><div class="panel stat-card"><div class="stat-label" id="lbl-pm">PM2.5 (สูงสุด)</div><div class="stat-value" id="max-pm25-val"><span id="max-pm25" style="color:var(--accent-green);">--</span></div><i id="pm-icon" class="fa-solid fa-smog stat-icon" style="color:var(--accent-green);"></i></div></div>
                     
                     <!-- Humidity Card -->
-                    <div class="col-md-2"><div class="panel stat-card"><div class="stat-label">ความชื้น (RH %)</div><div class="stat-value" style="color:var(--accent-blue);"><span id="avg-hum">--</span></div><i id="hum-icon" class="fa-solid fa-droplet stat-icon" style="color:var(--accent-blue);"></i></div></div>
+                    <div class="col-md-2"><div class="panel stat-card"><div class="stat-label" id="lbl-hum">ความชื้น (เฉลี่ย)</div><div class="stat-value" style="color:var(--accent-blue);"><span id="avg-hum">--</span></div><i id="hum-icon" class="fa-solid fa-droplet stat-icon" style="color:var(--accent-blue);"></i></div></div>
                     
                     <!-- Wind Card -->
-                    <div class="col-md-2"><div class="panel stat-card"><div class="stat-label">ลม (m/s)</div><div class="stat-value" style="color:var(--accent-purple);"><span id="avg-wind">--</span></div><i id="wind-icon" class="fa-solid fa-wind stat-icon" style="color:var(--accent-purple);"></i></div></div>
+                    <div class="col-md-2"><div class="panel stat-card"><div class="stat-label" id="lbl-wind">ลม (เฉลี่ย)</div><div class="stat-value" style="color:var(--accent-purple);"><span id="avg-wind">--</span></div><i id="wind-icon" class="fa-solid fa-wind stat-icon" style="color:var(--accent-purple);"></i></div></div>
                     
                     <div class="col-md-2">
                         <div class="panel stat-card text-center" id="fire-risk-panel" style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.3);">
@@ -446,11 +445,10 @@
         // ⚠️ ใส่ apiKey ของ Firebase ตรงนี้
         // ==========================================
         const firebaseConfig = {
-                apiKey: "AIzaSyBMW9SeWkYdrbU9byzphxpLd4JaAoIWKho",
+            apiKey: "AIzaSyBMW9SeWkYdrbU9byzphxpLd4JaAoIWKho",
               authDomain: "smart-forest-station.firebaseapp.com",
               databaseURL: "https://smart-forest-station-default-rtdb.asia-southeast1.firebasedatabase.app",
               projectId: "smart-forest-station",
-
         };
 
         let db, auth;
@@ -462,6 +460,7 @@
         let isHeatmapMode = false, isAddMode = false;
         let isFirstLoad = true;
         let prevAvgTemp = null; 
+        let currentFilter = 'ALL'; // ตัวแปรเก็บค่าเครื่องที่ถูกเลือก
         const alarmSound = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
 
         const todayStr = new Date().toISOString().split('T')[0];
@@ -471,6 +470,26 @@
             let el = document.getElementById(id);
             if(el) { el.classList.remove('flash-update'); void el.offsetWidth; el.classList.add('flash-update'); }
         }
+
+        // ================= MAP PANNING ON FILTER =================
+        $('#stationFilter').change(function() { 
+            currentFilter = $(this).val(); 
+            processData(); 
+            
+            // กรองตาราง Data Log ให้โชว์เฉพาะเครื่องที่เลือก
+            if(currentFilter !== 'ALL') { table.search(currentFilter).draw(); } 
+            else { table.search('').draw(); }
+
+            // ซูมแผนที่ไปหาสถานีที่ถูกเลือก
+            if(currentFilter !== 'ALL' && stationMasterList[currentFilter] && map) {
+                let st = stationMasterList[currentFilter];
+                map.setView([st.lat, st.lng], 15);
+                if(mapMarkers[currentFilter]) mapMarkers[currentFilter].openPopup();
+            } else if (currentFilter === 'ALL' && map) {
+                map.setView([13.95, 101.75], 11);
+                map.closePopup();
+            }
+        });
 
         $('.nav-item').click(function(e) {
             e.preventDefault();
@@ -546,8 +565,11 @@
             return Math.max(0, Math.min(100, Math.round(score)));
         }
 
+        // ================= 🧠 CORE DATA PROCESSOR (ISOLATED) =================
         function processData() {
+            // 1. กรองข้อมูล Data Log ให้เหลือเฉพาะเครื่องที่เลือก (เพื่อเอาไปวาดกราฟและ Alerts)
             let dataArr = currentFilter === 'ALL' ? allLogsMemory : allLogsMemory.filter(d => (d.station_id || "ST-00") === currentFilter);
+            
             let chartData = dataArr.slice(-20);
             let labels = chartData.map(d => new Date(d.timestamp).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}));
             [tempChart, pmChart, humChart, windChart].forEach(c => c.data.labels = labels);
@@ -556,23 +578,46 @@
             humChart.data.datasets[0].data = chartData.map(d => d.hum); humChart.update();
             windChart.data.datasets[0].data = chartData.map(d => d.wind); windChart.update();
             
+            // 2. คำนวณ Top Stat Cards (แยกเฉพาะสถานีที่ถูกเลือก)
             let on=0, tot=0, sumT=0, sumH=0, sumW=0, maxP=0, sumScore=0, validSt=0; const now = Date.now();
+            
             for (const [id, st] of Object.entries(stationMasterList)) {
-                tot++; const d = latestStationData[id];
-                if(d && (now - d.timestamp) <= 600000) {
-                    on++; validSt++;
-                    sumT += d.temp; sumW += d.wind; sumH += d.hum;
+                tot++; 
+                const d = latestStationData[id];
+                let isOnline = d && (now - d.timestamp) <= 600000;
+                if(isOnline) on++;
+
+                // บวกรวมค่า "เฉพาะ" สถานีที่เลือกไว้ใน Dropdown (หรือถ้าเลือก ALL ก็บวกทุกอัน)
+                if(isOnline && (currentFilter === 'ALL' || currentFilter === id)) {
+                    validSt++;
+                    sumT += d.temp; 
+                    sumW += d.wind; 
+                    sumH += d.hum;
                     if(d.pm25 > maxP) maxP = d.pm25;
                     sumScore += calculateRisk(d.temp, d.pm25, d.hum, d.wind);
                 }
             }
             
             $('#stat-total').text(tot); $('#stat-online').text(on);
+            
             if(validSt > 0) {
                 let newAvgTemp = (sumT/validSt).toFixed(1);
                 let newAvgWind = (sumW/validSt).toFixed(1);
                 let newAvgHum = (sumH/validSt).toFixed(0);
                 let newAvgRisk = Math.round(sumScore/validSt);
+
+                // เปลี่ยนข้อความ Label ตามสถานะการ Filter
+                if(currentFilter === 'ALL') {
+                    $('#lbl-temp').text('อุณหภูมิ (เฉลี่ย)');
+                    $('#lbl-pm').text('PM2.5 (สูงสุด)');
+                    $('#lbl-hum').text('ความชื้น (เฉลี่ย)');
+                    $('#lbl-wind').text('ลม (เฉลี่ย)');
+                } else {
+                    $('#lbl-temp').text('อุณหภูมิ (°C)');
+                    $('#lbl-pm').text('PM2.5 (µg/m³)');
+                    $('#lbl-hum').text('ความชื้น (RH %)');
+                    $('#lbl-wind').text('ลม (m/s)');
+                }
 
                 if(!isFirstLoad) {
                     if($('#avg-temp').text() !== newAvgTemp) flashElement('avg-temp');
@@ -615,9 +660,15 @@
                 $('#algo-score-display').css('color', rColor);
                 gaugeChart.data.datasets[0].backgroundColor = (newAvgRisk > 75) ? ['#1e293b','#1e293b', '#ef4444'] : (newAvgRisk > 50) ? ['#1e293b', '#f59e0b', '#1e293b'] : ['#10b981', '#1e293b', '#1e293b'];
                 gaugeChart.update(); $('#gauge-text-th').text(gText).css('color', rColor);
+            } else {
+                // ถ้าสถานีที่เลือก ออฟไลน์ หรือไม่มีข้อมูล ให้โชว์ขีด
+                $('#avg-temp, #avg-wind, #avg-hum, #max-pm25, #fire-risk-score').text('--');
+                $('#fire-risk-text').text('OFFLINE').css('color', 'var(--text-muted)');
+                $('#fire-risk-panel').css({'background': 'rgba(255,255,255,0.02)', 'border-color': 'var(--border-color)'});
             }
 
-            let feedHTML = ''; let recentLogs = [...allLogsMemory].reverse().slice(0, 15); let addedIds = new Set();
+            // 3. กรอง Alerts Feed ตามเครื่องที่เลือก (ใช้ dataArr)
+            let feedHTML = ''; let recentLogs = [...dataArr].reverse().slice(0, 15); let addedIds = new Set();
             for(let log of recentLogs) {
                 if(addedIds.has(log.station_id)) continue; addedIds.add(log.station_id);
                 let r = calculateRisk(log.temp, log.pm25, log.hum, log.wind);
@@ -742,6 +793,9 @@
             };
 
             dbRef.push(mockData).then(() => {
+                // บังคับให้ Dropdown เปลี่ยนเป็นสถานีที่เกิดเหตุ
+                $('#stationFilter').val(targetStation).change();
+                
                 $('.nav-item[data-target="view-dashboard"]').first().click();
                 $('#toastMessage').html(`🚨 SIMULATION MODE!<br>กำลังจำลองสถานการณ์ไฟป่าที่ ${targetStation}`);
                 new bootstrap.Toast(document.getElementById('alarmToast')).show();
@@ -775,8 +829,6 @@
                 if(isFirstLoad) setTimeout(() => { isFirstLoad = false; }, 2000);
             });
         }
-        $('#stationFilter').change(function() { currentFilter = $(this).val(); processData(); });
-        setInterval(() => { redrawMarkers(); processData(); }, 60000);
     </script>
 </body>
 </html>
