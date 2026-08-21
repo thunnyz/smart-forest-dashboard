@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SMART FOREST COMMAND CENTER</title>
 
-    <!-- Fonts & Icons --
+    <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -436,10 +436,11 @@
         // ⚠️ ใส่ apiKey ของ Firebase ตรงนี้
         // ==========================================
         const firebaseConfig = {
-            apiKey: "AIzaSyBMW9SeWkYdrbU9byzphxpLd4JaAoIWKho",
+apiKey: "AIzaSyBMW9SeWkYdrbU9byzphxpLd4JaAoIWKho",
               authDomain: "smart-forest-station.firebaseapp.com",
               databaseURL: "https://smart-forest-station-default-rtdb.asia-southeast1.firebasedatabase.app",
               projectId: "smart-forest-station",
+
         };
 
         let db, auth;
@@ -499,7 +500,6 @@
             let titleText = $(this).html().toUpperCase().replace(/(<([^>]+)>)/gi, "").trim();
             $('#pageTitle').html(`<i class="fa-solid fa-border-all" style="color:var(--accent-green);"></i> ${titleText}`);
             
-            // 🚨 การเรียก redrawMarkers หลังจากสลับหน้าเพื่อความปลอดภัยของ Leaflet Canvas
             if(map) {
                 map.invalidateSize();
                 redrawMarkers();
@@ -558,7 +558,7 @@
             return Math.max(0, Math.min(100, Math.round(score)));
         }
 
-        // ================= 🧠 CORE DATA PROCESSOR =================
+        // ================= 🧠 CORE DATA PROCESSOR (แก้ไขบั๊กเวลา Server เพี้ยน) =================
         function processData() {
             let dataArr = currentFilter === 'ALL' ? allLogsMemory : allLogsMemory.filter(d => (d.station_id || "ST-00") === currentFilter);
             
@@ -570,12 +570,16 @@
             humChart.data.datasets[0].data = chartData.map(d => d.hum); humChart.update();
             windChart.data.datasets[0].data = chartData.map(d => d.wind); windChart.update();
             
-            let on=0, tot=0, sumT=0, sumH=0, sumW=0, maxP=0, sumScore=0, validSt=0; const now = Date.now();
+            let on=0, tot=0, sumT=0, sumH=0, sumW=0, maxP=0, sumScore=0, validSt=0; 
+            const now = Date.now(); // เวลาปัจจุบันของคอมพิวเตอร์เรา
             
             for (const [id, st] of Object.entries(stationMasterList)) {
                 tot++; 
                 const d = latestStationData[id];
-                let isOnline = d && (now - d.timestamp) <= 600000;
+                
+                // 🚨 ใช้งานตัวแปร local_received_time แทน d.timestamp เพื่อหลีกเลี่ยงบั๊กเวลา Server ไม่ตรงกับคอมฯ (หน่วง 15 วิ)
+                let isOnline = d && (now - (d.local_received_time || d.timestamp)) <= 15000;
+                
                 if(isOnline) on++;
 
                 if(isOnline && (currentFilter === 'ALL' || currentFilter === id)) {
@@ -664,9 +668,9 @@
             $('#alerts-container-dash, #alerts-log-full').html(feedHTML || '<div class="text-center text-muted mt-4">ไม่มีข้อมูล</div>');
         }
 
-        // 🚨 ป้องกัน Error getImageData Width is 0
+        // 🚨 ป้องกัน Error getImageData Width is 0 และอัปเดตระบบเวลา
         function redrawMarkers() {
-            if(!map || !$('#map').is(':visible')) return; // ถ้าแผนที่โดนซ่อนอยู่ (display:none) ให้ข้ามการวาดไปก่อน
+            if(!map || !$('#map').is(':visible')) return; 
 
             for (let id in mapMarkers) map.removeLayer(mapMarkers[id]); if (heatLayer) map.removeLayer(heatLayer);
             mapMarkers = {}; let heatData = []; const now = Date.now();
@@ -681,7 +685,9 @@
                     rScore = calculateRisk(t, p, h, w);
                     if (rScore > 75) { color="#ef4444"; i=1.0; rText="🔴 วิกฤต"; pulseClass = "radar-pulse-danger"; } 
                     else if (rScore > 50) { color="#f59e0b"; i=0.7; rText="🟠 เสี่ยง"; pulseClass = "radar-pulse-warning"; } 
-                    if ((now - d.timestamp) > 600000) { st="Offline"; color="#64748b"; rText="⚫ ขาดการติดต่อ"; i=0; pulseClass = '';} else { st="Online"; }
+                    
+                    // 🚨 ใช้งานตัวแปร local_received_time (15 วินาที)
+                    if ((now - (d.local_received_time || d.timestamp)) > 15000) { st="Offline"; color="#64748b"; rText="⚫ ขาดการติดต่อ"; i=0; pulseClass = '';} else { st="Online"; }
                 }
                 if (isHeatmapMode && i > 0) heatData.push([data.lat, data.lng, i]); 
                 else if (!isHeatmapMode) {
@@ -755,14 +761,12 @@
 
         window.exportReportPDF = function() { window.print(); };
 
-        // ================= SIMULATION SYSTEM (FIXED) =================
+        // ================= SIMULATION SYSTEM =================
         window.triggerSimulation = function() {
             if(!confirm("⚠️ ยืนยันการจำลองเหตุการณ์ไฟป่า?\nระบบจะส่งค่าวิกฤตเข้าไปที่สถานีที่มีอยู่ในระบบทันที")) return;
             
-            // 🚨 1. สลับหน้าจอมาที่ Dashboard ก่อน เพื่อป้องกัน Error กราฟ/แผนที่ขนาดเป็น 0
             $('.nav-item[data-target="view-dashboard"]').first().click();
 
-            // 🚨 2. หน่วงเวลาให้ UI สลับหน้าเสร็จก่อน ค่อยยิงข้อมูล
             setTimeout(() => {
                 let targetStation = "ST-01"; 
                 let stationKeys = Object.keys(stationMasterList);
@@ -805,6 +809,9 @@
                 const id = data.station_id || "ST-00"; 
                 data.hum = data.hum !== undefined ? data.hum : (Math.floor(Math.random() * 15) + 45); 
                 
+                // 🚨 หัวใจของการแก้บั๊ก: ประทับเวลาของเครื่องคอมพิวเตอร์ปัจจุบัน (เพื่อกันเวลา Server เพี้ยน)
+                data.local_received_time = Date.now(); 
+
                 latestStationData[id] = data; allLogsMemory.push(data); if(allLogsMemory.length > 300) allLogsMemory.shift(); 
                 
                 let tStr = new Date(data.timestamp).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
@@ -815,6 +822,17 @@
                 if(isFirstLoad) setTimeout(() => { isFirstLoad = false; }, 2000);
             });
         }
+        
+        // 🚨 ครอบ Error ไว้กันมันค้างกลางทาง
+        setInterval(() => { 
+            try {
+                redrawMarkers(); 
+                processData(); 
+            } catch(e) {
+                console.error("Dashboard Interval Error:", e);
+            }
+        }, 5000);
+
     </script>
 </body>
 </html>
