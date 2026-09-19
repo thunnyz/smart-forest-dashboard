@@ -16,15 +16,25 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.3.6/css/buttons.bootstrap5.min.css">
 
     <style>
+        /* === Dark Theme Variables === */
         :root {
-            --bg-dark: #070b14; --panel-bg: #101623; --sidebar-bg: #0a0f1a;
-            --text-main: #f8fafc; --text-muted: #94a3b8;
-            --accent-green: #10b981; --accent-red: #ef4444; --accent-orange: #f59e0b;
-            --accent-blue: #3b82f6; --accent-purple: #8b5cf6;
+            --bg-dark: #070b14;
+            --panel-bg: #101623;
+            --sidebar-bg: #0a0f1a;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --accent-orange: #f59e0b;
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
             --border-color: rgba(255,255,255,0.05);
         }
+
         body { background-color: var(--bg-dark); color: var(--text-main); font-family: 'Kanit', sans-serif; overflow: hidden; margin: 0; }
         .text-muted { color: var(--text-muted) !important; }
+        
+        /* Forms & Tables */
         .form-control, .form-select { background-color: #1e293b !important; color: #f8fafc !important; border-color: #334155 !important; }
         .form-control:focus, .form-select:focus { background-color: #0f172a !important; color: #f8fafc !important; border-color: var(--accent-green) !important; box-shadow: 0 0 0 0.2rem rgba(16,185,129,0.25) !important; }
         .form-control::placeholder { color: #64748b !important; }
@@ -34,9 +44,14 @@
         .page-link:hover { background-color: #334155 !important; color: white !important; }
         .page-item.active .page-link { background-color: var(--accent-green) !important; border-color: var(--accent-green) !important; color: white !important; }
 
+        /* Leaflet Popups */
         .leaflet-container { font-family: 'Kanit', sans-serif; }
         .leaflet-popup-content, .leaflet-popup-content * { color: var(--text-main) !important; }
         .leaflet-popup-content b { color: white !important; }
+
+        /* =========================================
+           ✨ DYNAMIC & REAL-TIME ANIMATIONS ✨
+           ========================================= */
 
         .live-dot { display: inline-block; width: 10px; height: 10px; background-color: var(--accent-red); border-radius: 50%; margin-right: 8px; box-shadow: 0 0 10px var(--accent-red); animation: blink-live 1.5s infinite ease-in-out; }
         @keyframes blink-live { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1); } }
@@ -61,7 +76,10 @@
         .trend-down { color: var(--accent-blue); animation: fadeDown 0.3s forwards; text-shadow: 0 0 10px rgba(59,130,246,0.5); }
         .anim-shake { animation: shake 0.2s ease-in-out infinite !important; color: var(--accent-red) !important; opacity: 0.8 !important;}
 
+        /* === Layout === */
         .app-container { display: flex; height: 100vh; overflow: hidden; }
+        
+        /* Sidebar */
         .sidebar { width: 90px; background: var(--sidebar-bg); display: flex; flex-direction: column; align-items: center; padding-top: 20px; border-right: 1px solid var(--border-color); z-index: 1000; flex-shrink: 0; }
         .sidebar-logo { color: var(--accent-green); font-size: 2rem; margin-bottom: 5px; text-shadow: 0 0 10px rgba(16, 185, 129, 0.5); }
         .sidebar-logo-text { font-size: 0.6rem; color: var(--accent-green); font-weight: bold; margin-bottom: 25px; text-align: center; line-height: 1.2; letter-spacing: 1px; }
@@ -70,27 +88,33 @@
         .nav-item:hover, .nav-item.active { color: var(--text-main); border-left: 3px solid var(--accent-green); background: rgba(16, 185, 129, 0.05); }
         .nav-item:hover .nav-icon, .nav-item.active .nav-icon { color: var(--accent-green); transform: scale(1.1); }
 
+        /* Main Content */
         .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; padding: 15px 25px; scroll-behavior: smooth; }
         .view-section { display: none; animation: fadeIn 0.4s; }
         .view-section.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
+        /* Top Header */
         .top-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 12px; border-bottom: 1px solid var(--border-color); margin-bottom: 15px; }
         .header-title { font-size: 1.2rem; font-weight: 800; letter-spacing: 1px; color: var(--text-main); margin: 0; display: flex; align-items: center; gap: 10px;}
         .header-actions { display: flex; gap: 10px; align-items: center; }
         
+        /* Panels / Cards */
         .panel { background: var(--panel-bg); border-radius: 12px; padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); border: 1px solid var(--border-color); }
         .panel-title { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-bottom: 12px; letter-spacing: 0.5px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
         
+        /* Dashboard Stat Cards */
         .stat-card { position: relative; overflow: hidden; padding: 15px; height: 90px; display: flex; flex-direction: column; justify-content: center; }
         .stat-value { font-size: 1.8rem; font-weight: 800; line-height: 1.1; margin-top: 5px; display: inline-block;}
         .stat-label { font-size: 0.75rem; color: var(--text-muted); }
         .stat-icon { position: absolute; right: 15px; top: 15px; font-size: 1.5rem; opacity: 0.15; transition: all 0.3s;}
         
+        /* Map */
         #map { height: 380px; border-radius: 8px; width: 100%; background: #000; }
         .leaflet-popup-content-wrapper { background: rgba(16, 22, 35, 0.95); color: #f8fafc; border: 1px solid #334155; backdrop-filter: blur(5px); }
         .leaflet-popup-tip { background: rgba(16, 22, 35, 0.95); }
 
+        /* Alerts List Mini */
         .alerts-feed { overflow-y: auto; padding-right: 5px; }
         .alerts-feed::-webkit-scrollbar { width: 4px; }
         .alerts-feed::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
@@ -103,9 +127,11 @@
         .alert-content p { margin: 0; font-size: 0.65rem; color: var(--text-muted); }
         .alert-time { font-size: 0.65rem; color: var(--text-muted); white-space: nowrap; margin-left: auto; }
 
+        /* Charts Section */
         .mini-chart-container { height: 110px; width: 100%; }
         .chart-header { font-size: 0.75rem; margin-bottom: 5px; color: var(--text-muted); display: flex; align-items: center; gap: 5px; }
 
+        /* Login Screen */
         #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-dark); z-index: 9999; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px); }
         .login-card { background: var(--panel-bg); padding: 40px; border-radius: 15px; border: 1px solid var(--border-color); box-shadow: 0 20px 40px rgba(0,0,0,0.5); width: 100%; max-width: 400px; }
 
@@ -255,14 +281,17 @@
                 <div class="row g-3">
                     <div class="col-md-5">
                         <div class="panel h-100 text-center">
-                            <h6 class="panel-title text-start"><i class="fa-solid fa-microchip"></i> Fire Risk Algorithm (AI Driven)</h6>
+                            <h6 class="panel-title text-start"><i class="fa-solid fa-microchip"></i> Fire Risk Algorithm</h6>
                             <img src="https://cdn-icons-png.flaticon.com/512/2072/2072126.png" width="80" class="my-3" style="filter: invert(1) opacity(0.5);">
                             <div class="px-4">
-                                <div class="small text-muted mb-2">โมเดล Machine Learning (Random Forest) จะวิเคราะห์ตัวแปรตามสถิติย้อนหลัง 5 ปีในพื้นที่จริง</div>
+                                <div class="small text-muted d-flex justify-content-between"><span>Temperature</span> <span class="text-orange">+</span></div>
+                                <div class="small text-muted d-flex justify-content-between"><span>PM2.5</span> <span class="text-green">+</span></div>
+                                <div class="small text-muted d-flex justify-content-between"><span>Humidity (RH)</span> <span class="text-blue">-</span></div>
+                                <div class="small text-muted d-flex justify-content-between"><span>Wind Speed</span> <span class="text-purple">+</span></div>
                                 <hr class="border-secondary">
-                                <div class="text-white small mb-1">AI RISK SCORE</div>
+                                <div class="text-white small mb-1">SCORE ALGORITHM</div>
                                 <h1 class="fw-bold" id="algo-score-display" style="color:var(--accent-green);">--</h1>
-                                <div class="small text-muted mt-3"><i class="fa-brands fa-line text-success"></i> ระบบจะวิเคราะห์ข้อมูลแบบ Real-time และส่ง LINE ทันทีเมื่อคะแนนวิกฤต</div>
+                                <div class="small text-muted mt-3"><i class="fa-brands fa-line text-success"></i> ระบบจะวิเคราะห์ข้อมูลแบบ Real-time และส่ง LINE ทันทีเมื่อคะแนนสูงกว่า 75</div>
                             </div>
                         </div>
                     </div>
@@ -407,10 +436,11 @@
         // ⚠️ ใส่ apiKey ของ Firebase ตรงนี้
         // ==========================================
         const firebaseConfig = {
-                apiKey: "AIzaSyBMW9SeWkYdrbU9byzphxpLd4JaAoIWKho",
+apiKey: "AIzaSyBMW9SeWkYdrbU9byzphxpLd4JaAoIWKho",
               authDomain: "smart-forest-station.firebaseapp.com",
               databaseURL: "https://smart-forest-station-default-rtdb.asia-southeast1.firebasedatabase.app",
               projectId: "smart-forest-station",
+
         };
 
         let db, auth;
@@ -433,6 +463,7 @@
             if(el) { el.classList.remove('flash-update'); void el.offsetWidth; el.classList.add('flash-update'); }
         }
 
+        // ================= MAP PANNING ON FILTER =================
         $('#stationFilter').change(function() { 
             currentFilter = $(this).val(); 
             processData(); 
@@ -522,13 +553,12 @@
         $('#stationForm').submit(e => { e.preventDefault(); db.ref('stations/' + $('#stId').val()).set({ name: $('#stName').val(), lat: parseFloat($('#stLat').val()), lng: parseFloat($('#stLng').val()) }).then(() => $('#stationModal').modal('hide')); });
         window.deleteStation = id => { if(isAdmin && confirm(`ลบสถานี ${id}?`)) db.ref('stations/' + id).remove(); };
 
-        // 🧠 ฟังก์ชันคำนวณสำรอง (ถ้ายังไม่มีข้อมูลจาก AI)
-        function calculateBackupRisk(t, p, h, w) {
+        function calculateRisk(t, p, h, w) {
             let score = 0; score += (t / 45) * 40; score += (Math.min(p, 200) / 200) * 30; score += ((100 - h) / 100) * 15; score += (Math.min(w, 20) / 20) * 15; 
             return Math.max(0, Math.min(100, Math.round(score)));
         }
 
-        // ================= 🧠 CORE DATA PROCESSOR (ผสานพลัง AI) =================
+        // ================= 🧠 CORE DATA PROCESSOR (แก้ไขบั๊กเวลา Server เพี้ยน) =================
         function processData() {
             let dataArr = currentFilter === 'ALL' ? allLogsMemory : allLogsMemory.filter(d => (d.station_id || "ST-00") === currentFilter);
             
@@ -540,30 +570,25 @@
             humChart.data.datasets[0].data = chartData.map(d => d.hum); humChart.update();
             windChart.data.datasets[0].data = chartData.map(d => d.wind); windChart.update();
             
-            let on=0, tot=0, sumT=0, sumH=0, sumW=0, maxP=0, validSt=0; 
-            const now = Date.now(); 
-
-            // 🤖 เช็คคะแนนจาก AI
-            let aiRiskScore = null;
-            let aiRiskText = null;
+            let on=0, tot=0, sumT=0, sumH=0, sumW=0, maxP=0, sumScore=0, validSt=0; 
+            const now = Date.now(); // เวลาปัจจุบันของคอมพิวเตอร์เรา
             
             for (const [id, st] of Object.entries(stationMasterList)) {
                 tot++; 
                 const d = latestStationData[id];
+                
+                // 🚨 ใช้งานตัวแปร local_received_time แทน d.timestamp เพื่อหลีกเลี่ยงบั๊กเวลา Server ไม่ตรงกับคอมฯ (หน่วง 15 วิ)
                 let isOnline = d && (now - (d.local_received_time || d.timestamp)) <= 15000;
                 
                 if(isOnline) on++;
 
                 if(isOnline && (currentFilter === 'ALL' || currentFilter === id)) {
                     validSt++;
-                    sumT += d.temp; sumW += d.wind; sumH += d.hum;
+                    sumT += d.temp; 
+                    sumW += d.wind; 
+                    sumH += d.hum;
                     if(d.pm25 > maxP) maxP = d.pm25;
-                    
-                    // อ่านค่าจากที่ Python อัปโหลดมาให้
-                    if(st.ai_risk_score !== undefined) {
-                        aiRiskScore = st.ai_risk_score;
-                        aiRiskText = st.ai_level_th;
-                    }
+                    sumScore += calculateRisk(d.temp, d.pm25, d.hum, d.wind);
                 }
             }
             
@@ -573,16 +598,20 @@
                 let newAvgTemp = (sumT/validSt).toFixed(1);
                 let newAvgWind = (sumW/validSt).toFixed(1);
                 let newAvgHum = (sumH/validSt).toFixed(0);
+                let newAvgRisk = Math.round(sumScore/validSt);
 
-                // เลือกใช้คะแนน: ถ้ามี AI ใช้ AI ถ้าไม่มีใช้สูตรสำรอง
-                let finalRiskScore = aiRiskScore !== null ? aiRiskScore : calculateBackupRisk(newAvgTemp, maxP, newAvgHum, newAvgWind);
+                if(currentFilter === 'ALL') {
+                    $('#lbl-temp').text('อุณหภูมิ (เฉลี่ย)'); $('#lbl-pm').text('PM2.5 (สูงสุด)'); $('#lbl-hum').text('ความชื้น (เฉลี่ย)'); $('#lbl-wind').text('ลม (เฉลี่ย)');
+                } else {
+                    $('#lbl-temp').text('อุณหภูมิ (°C)'); $('#lbl-pm').text('PM2.5 (µg/m³)'); $('#lbl-hum').text('ความชื้น (RH %)'); $('#lbl-wind').text('ลม (m/s)');
+                }
 
                 if(!isFirstLoad) {
                     if($('#avg-temp').text() !== newAvgTemp) flashElement('avg-temp');
                     if($('#max-pm25').text() != maxP) flashElement('max-pm25');
                     if($('#avg-hum').text() !== newAvgHum) flashElement('avg-hum');
                     if($('#avg-wind').text() !== newAvgWind) flashElement('avg-wind');
-                    if($('#fire-risk-score').text() != finalRiskScore) flashElement('fire-risk-score');
+                    if($('#fire-risk-score').text() != newAvgRisk) flashElement('fire-risk-score');
                 }
 
                 if (prevAvgTemp !== null && prevAvgTemp != newAvgTemp) {
@@ -596,18 +625,27 @@
                 if(windSpeed > 0) { let speed = Math.max(0.2, 2.0 / windSpeed); windIcon.style.animation = `spin ${speed}s linear infinite`; windIcon.style.opacity = '0.4'; } 
                 else { windIcon.style.animation = 'none'; windIcon.style.opacity = '0.15'; }
 
+                let pmIcon = document.getElementById('pm-icon');
+                if(maxP > 100) pmIcon.style.animation = 'float 0.5s ease-in-out infinite';
+                else if(maxP > 50) pmIcon.style.animation = 'float 1.5s ease-in-out infinite';
+                else pmIcon.style.animation = 'float 3s ease-in-out infinite';
+
+                let humIcon = document.getElementById('hum-icon');
+                let humSpeed = Math.max(0.5, 3.0 - (parseFloat(newAvgHum) / 50));
+                humIcon.style.animation = `bounce-drop ${humSpeed}s ease-in-out infinite`;
+
                 $('#avg-temp').text(newAvgTemp); $('#avg-wind').text(newAvgWind); $('#avg-hum').text(newAvgHum); $('#max-pm25').text(maxP);
-                $('#fire-risk-score').text(finalRiskScore); $('#algo-score-display').text(finalRiskScore);
+                $('#fire-risk-score').text(newAvgRisk); $('#algo-score-display').text(newAvgRisk);
                 
-                let rText = "LOW 🟢", rColor = "var(--accent-green)", gText = aiRiskText || "ปกติ";
-                if(finalRiskScore >= 97) { rText = "CRITICAL 🔥"; rColor = "var(--accent-red)"; gText = aiRiskText || "วิกฤต"; }
-                else if(finalRiskScore >= 70) { rText = "HIGH 🟠"; rColor = "var(--accent-orange)"; gText = aiRiskText || "สูง"; }
-                else if(finalRiskScore >= 50) { rText = "WATCH 🟡"; rColor = "#facc15"; gText = aiRiskText || "เฝ้าระวัง"; }
+                let rText = "LOW 🟢", rColor = "var(--accent-green)", gText = "ปกติ";
+                if(newAvgRisk > 75) { rText = "CRITICAL 🔥"; rColor = "var(--accent-red)"; gText = "วิกฤต"; }
+                else if(newAvgRisk > 50) { rText = "HIGH 🟠"; rColor = "var(--accent-orange)"; gText = "เสี่ยง"; }
+                else if(newAvgRisk > 30) { rText = "WATCH 🟡"; rColor = "#facc15"; gText = "เฝ้าระวัง"; }
                 
                 $('#fire-risk-text').text(rText).css('color', rColor); $('#fire-risk-score').css('color', rColor);
                 $('#fire-risk-panel').css({'background': `rgba(${rColor==='var(--accent-red)'?'239,68,68':(rColor==='var(--accent-orange)'?'245,158,11':'16,185,129')}, 0.05)`, 'border-color': rColor});
                 $('#algo-score-display').css('color', rColor);
-                gaugeChart.data.datasets[0].backgroundColor = (finalRiskScore >= 97) ? ['#1e293b','#1e293b', '#ef4444'] : (finalRiskScore >= 70) ? ['#1e293b', '#f59e0b', '#1e293b'] : ['#10b981', '#1e293b', '#1e293b'];
+                gaugeChart.data.datasets[0].backgroundColor = (newAvgRisk > 75) ? ['#1e293b','#1e293b', '#ef4444'] : (newAvgRisk > 50) ? ['#1e293b', '#f59e0b', '#1e293b'] : ['#10b981', '#1e293b', '#1e293b'];
                 gaugeChart.update(); $('#gauge-text-th').text(gText).css('color', rColor);
             } else {
                 $('#avg-temp, #avg-wind, #avg-hum, #max-pm25, #fire-risk-score').text('--');
@@ -618,21 +656,19 @@
             let feedHTML = ''; let recentLogs = [...dataArr].reverse().slice(0, 15); let addedIds = new Set();
             for(let log of recentLogs) {
                 if(addedIds.has(log.station_id)) continue; addedIds.add(log.station_id);
-                
-                let st = stationMasterList[log.station_id];
-                let r = (st && st.ai_risk_score !== undefined) ? st.ai_risk_score : calculateBackupRisk(log.temp, log.pm25, log.hum, log.wind);
-                
+                let r = calculateRisk(log.temp, log.pm25, log.hum, log.wind);
                 let time = new Date(log.timestamp).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
                 let stId = log.station_id || 'ST-00';
                 let animClass = !isFirstLoad ? 'new-alert' : '';
 
-                if(r >= 97) feedHTML += `<div class="alert-item danger ${animClass}"><div class="flex-grow-1"><h6 class="text-red">🔥 ${stId} - วิกฤต!</h6><p>T:${log.temp}°C | PM:${log.pm25} | RH:${log.hum}%</p></div><div class="alert-time">${time}</div></div>`;
-                else if(r >= 70) feedHTML += `<div class="alert-item warning ${animClass}"><div class="flex-grow-1"><h6 class="text-orange">⚠️ ${stId} - เฝ้าระวัง</h6><p>ความเสี่ยงพุ่งสูง</p></div><div class="alert-time">${time}</div></div>`;
+                if(r > 75) feedHTML += `<div class="alert-item danger ${animClass}"><div class="flex-grow-1"><h6 class="text-red">🔥 ${stId} - วิกฤต!</h6><p>T:${log.temp}°C | PM:${log.pm25} | RH:${log.hum}%</p></div><div class="alert-time">${time}</div></div>`;
+                else if(r > 50) feedHTML += `<div class="alert-item warning ${animClass}"><div class="flex-grow-1"><h6 class="text-orange">⚠️ ${stId} - เฝ้าระวัง</h6><p>พบกลุ่มควัน / อุณหภูมิสูง</p></div><div class="alert-time">${time}</div></div>`;
                 else feedHTML += `<div class="alert-item ${animClass}"><div class="flex-grow-1"><h6 class="text-muted">✅ ${stId} - ปกติ</h6><p>สภาพแวดล้อมปลอดภัย</p></div><div class="alert-time">${time}</div></div>`;
             }
             $('#alerts-container-dash, #alerts-log-full').html(feedHTML || '<div class="text-center text-muted mt-4">ไม่มีข้อมูล</div>');
         }
 
+        // 🚨 ป้องกัน Error getImageData Width is 0 และอัปเดตระบบเวลา
         function redrawMarkers() {
             if(!map || !$('#map').is(':visible')) return; 
 
@@ -646,13 +682,11 @@
 
                 if (d) {
                     t=d.temp; p=d.pm25; w=d.wind; h=d.hum; tStr = new Date(d.timestamp).toLocaleTimeString('th-TH');
+                    rScore = calculateRisk(t, p, h, w);
+                    if (rScore > 75) { color="#ef4444"; i=1.0; rText="🔴 วิกฤต"; pulseClass = "radar-pulse-danger"; } 
+                    else if (rScore > 50) { color="#f59e0b"; i=0.7; rText="🟠 เสี่ยง"; pulseClass = "radar-pulse-warning"; } 
                     
-                    rScore = (data.ai_risk_score !== undefined) ? data.ai_risk_score : calculateBackupRisk(t, p, h, w);
-                    rText = data.ai_level_th || "ปกติ";
-
-                    if (rScore >= 97) { color="#ef4444"; i=1.0; rText="🔴 วิกฤต"; pulseClass = "radar-pulse-danger"; } 
-                    else if (rScore >= 70) { color="#f59e0b"; i=0.7; rText="🟠 สูง"; pulseClass = "radar-pulse-warning"; } 
-                    
+                    // 🚨 ใช้งานตัวแปร local_received_time (15 วินาที)
                     if ((now - (d.local_received_time || d.timestamp)) > 15000) { st="Offline"; color="#64748b"; rText="⚫ ขาดการติดต่อ"; i=0; pulseClass = '';} else { st="Online"; }
                 }
                 if (isHeatmapMode && i > 0) heatData.push([data.lat, data.lng, i]); 
@@ -666,6 +700,7 @@
             if (isHeatmapMode && heatData.length > 0) heatLayer = L.heatLayer(heatData, {radius: 40, blur: 20, maxZoom: 15, gradient: {0.4: 'lime', 0.6: 'orange', 1.0: 'red'}}).addTo(map);
         }
 
+        // ================= REPORTS SYSTEM =================
         let currentReportLogs = [];
         window.generateReportPreview = function() {
             let stFilter = $('#reportStationFilter').val();
@@ -683,12 +718,11 @@
                 return;
             }
 
-            let maxT=0, maxP=0, alerts=0;
+            let maxT=0, maxP=0, sumT=0, sumH=0, alerts=0;
             currentReportLogs.forEach(d => {
                 if(d.temp > maxT) maxT = d.temp; if(d.pm25 > maxP) maxP = d.pm25;
-                let st = stationMasterList[d.station_id];
-                let rScore = (st && st.ai_risk_score !== undefined) ? st.ai_risk_score : calculateBackupRisk(d.temp, d.pm25, (d.hum||60), d.wind);
-                if(rScore >= 97) alerts++;
+                sumT += d.temp; sumH += (d.hum||60);
+                if(calculateRisk(d.temp, d.pm25, (d.hum||60), d.wind) > 75) alerts++;
             });
 
             let html = `
@@ -704,10 +738,9 @@
                         <thead><tr><th>วัน-เวลา</th><th>สถานี</th><th>อุณหภูมิ</th><th>PM2.5</th><th>ความชื้น</th><th>ระดับความเสี่ยง</th></tr></thead>
                         <tbody>
                             ${currentReportLogs.slice(-5).reverse().map(d => {
-                                let stNode = stationMasterList[d.station_id];
-                                let r = (stNode && stNode.ai_risk_score !== undefined) ? stNode.ai_risk_score : calculateBackupRisk(d.temp, d.pm25, (d.hum||60), d.wind);
-                                let st = r >= 97 ? '<span class="badge bg-danger">วิกฤต</span>' : (r >= 70 ? '<span class="badge bg-warning text-dark">สูง</span>' : '<span class="badge bg-success">ปกติ</span>');
-                                return `<tr><td class="text-white">${new Date(d.timestamp).toLocaleString('th-TH')}</td><td class="text-white">${d.station_id || 'ST-00'}</td><td class="text-white">${d.temp}</td><td class="text-white">${d.pm25}</td><td class="text-white">${d.hum\vert{}\vert{}60}</td><td>${st}</td></tr>`;
+                                let r = calculateRisk(d.temp, d.pm25, (d.hum||60), d.wind);
+                                let st = r > 75 ? '<span class="badge bg-danger">วิกฤต</span>' : (r > 50 ? '<span class="badge bg-warning text-dark">เสี่ยง</span>' : '<span class="badge bg-success">ปกติ</span>');
+                                return `<tr><td class="text-white">${new Date(d.timestamp).toLocaleString('th-TH')}</td><td class="text-white">${d.station_id || 'ST-00'}</td><td class="text-white">${d.temp}</td><td class="text-white">${d.pm25}</td><td class="text-white">${d.hum||60}</td><td>${st}</td></tr>`;
                             }).join('')}
                         </tbody>
                     </table>
@@ -720,8 +753,7 @@
             if(currentReportLogs.length === 0) return alert('กรุณากดดูตัวอย่างรายงานก่อนดาวน์โหลด CSV');
             let csv = "data:text/csv;charset=utf-8,\uFEFFวัน-เวลา,สถานี,อุณหภูมิ,PM2.5,ความชื้น,ความเร็วลม,คะแนนความเสี่ยง\n";
             currentReportLogs.forEach(d => {
-                let stNode = stationMasterList[d.station_id];
-                let rScore = (stNode && stNode.ai_risk_score !== undefined) ? stNode.ai_risk_score : calculateBackupRisk(d.temp, d.pm25, (d.hum||60), d.wind);
+                let rScore = calculateRisk(d.temp, d.pm25, (d.hum||60), d.wind);
                 csv += `"${new Date(d.timestamp).toLocaleString('th-TH')}",${d.station_id||'ST-00'},${d.temp},${d.pm25},${d.hum||60},${d.wind},${rScore}\n`;
             });
             const link = document.createElement("a"); link.href = encodeURI(csv); link.download = `Smart_Forest_Report_${Date.now()}.csv`; document.body.appendChild(link); link.click(); link.remove();
@@ -729,8 +761,10 @@
 
         window.exportReportPDF = function() { window.print(); };
 
+        // ================= SIMULATION SYSTEM =================
         window.triggerSimulation = function() {
             if(!confirm("⚠️ ยืนยันการจำลองเหตุการณ์ไฟป่า?\nระบบจะส่งค่าวิกฤตเข้าไปที่สถานีที่มีอยู่ในระบบทันที")) return;
+            
             $('.nav-item[data-target="view-dashboard"]').first().click();
 
             setTimeout(() => {
@@ -739,7 +773,16 @@
                 if(stationKeys.length > 0) targetStation = stationKeys[0]; 
 
                 let dbRef = firebase.database().ref('logs');
-                let mockData = { station_id: targetStation, temp: 48.5, pm25: 650, hum: 25, wind: 18, rain: 0, battery: 99, timestamp: firebase.database.ServerValue.TIMESTAMP };
+                let mockData = {
+                    station_id: targetStation,
+                    temp: 48.5,       
+                    pm25: 650,        
+                    hum: 25,          
+                    wind: 18,         
+                    rain: 0,
+                    battery: 99,
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                };
 
                 dbRef.push(mockData).then(() => {
                     $('#stationFilter').val(targetStation).change();
@@ -749,6 +792,7 @@
             }, 300);
         };
 
+        // --- Firebase Init ---
         if (db) {
             db.ref('stations').on('value', snap => {
                 stationMasterList = snap.val() || {};
@@ -764,6 +808,8 @@
                 const data = snap.val(); if (!data) return;
                 const id = data.station_id || "ST-00"; 
                 data.hum = data.hum !== undefined ? data.hum : (Math.floor(Math.random() * 15) + 45); 
+                
+                // 🚨 หัวใจของการแก้บั๊ก: ประทับเวลาของเครื่องคอมพิวเตอร์ปัจจุบัน (เพื่อกันเวลา Server เพี้ยน)
                 data.local_received_time = Date.now(); 
 
                 latestStationData[id] = data; allLogsMemory.push(data); if(allLogsMemory.length > 300) allLogsMemory.shift(); 
@@ -772,11 +818,21 @@
                 table.row.add([ tStr, `<span class="badge bg-secondary">${id}</span>`, data.temp, data.pm25, data.hum, data.wind ]).draw(false);
 
                 processData(); redrawMarkers();
+                
                 if(isFirstLoad) setTimeout(() => { isFirstLoad = false; }, 2000);
             });
         }
         
-        setInterval(() => { try { redrawMarkers(); processData(); } catch(e) {} }, 5000);
+        // 🚨 ครอบ Error ไว้กันมันค้างกลางทาง
+        setInterval(() => { 
+            try {
+                redrawMarkers(); 
+                processData(); 
+            } catch(e) {
+                console.error("Dashboard Interval Error:", e);
+            }
+        }, 5000);
+
     </script>
 </body>
 </html>
